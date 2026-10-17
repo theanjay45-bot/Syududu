@@ -938,10 +938,14 @@ def _send_close_message(t):
     emoji    = "✅" if is_win else "❌"
     medal    = "🏆" if is_win else "💸"
 
-    entry    = float(t["entry"])
-    exit_p   = float(t["exit_price"])
-    sl       = float(t["sl"])
-    tp       = float(t["tp"])
+    entry    = float(t.get("entry") or 0)
+    exit_p   = float(t.get("exit_price") or 0)
+    sl       = float(t.get("sl") or 0)
+    tp       = float(t.get("tp") or 0)
+
+    if entry == 0:
+        log.warning("_send_close_message: entry=0, skip pesan close untuk %s", t.get("symbol","?"))
+        return
     rr_val   = float(t.get("rr", TARGET_RR))
     risk_r   = float(t.get("risk_usdt", ACCOUNT_EQUITY * RISK_PER_TRADE))
     result_r = float(t.get("result_r", 0))
@@ -965,7 +969,7 @@ def _send_close_message(t):
     pnl_net   = pnl_gross - fee_usdt
 
     # Move (harga entry → exit dalam %)
-    move_pct  = (exit_p - entry) / entry * 100
+    move_pct  = (exit_p - entry) / entry * 100 if entry != 0 else 0.0
     move_pct  = move_pct if t["direction"] == "LONG" else -move_pct
 
     # Ringkasan sinyal asal (note)
@@ -1262,6 +1266,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
