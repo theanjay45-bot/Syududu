@@ -1,8 +1,8 @@
 """
-ALPHAQUANT V6.0
+ALPHAQUANT V6.1
 Strategi: T-A-P-T-E (Trend → Area → Pattern → Trigger → Exit)
 Berdasarkan: Checklist Trading Crypto 1H (Akademi Crypto - Crypto Trading Guide hlm. 138-139)
-Pair   : BTC-USDT-SWAP (eksklusif)
+Pair   : Top 10 USDT perpetual OKX by 24h volume
 TF     : 15m
 Mode   : Signal-only → Telegram
 
@@ -39,13 +39,16 @@ def env_first(*names: str) -> str:
 TOKEN   = env_first("TELEGRAM_TOKEN", "TELEGRAM_BOT_TOKEN", "BOT_TOKEN")
 CHAT_ID = env_first("CHAT_ID", "TELEGRAM_CHAT_ID", "TELEGRAM_CHAT")
 
-# --- Instrument ---
-SYMBOL      = "BTC-USDT-SWAP"
+# --- Universe ---
+TOP_PAIRS        = int(os.getenv("TOP_PAIRS", "10"))
+MIN_VOLUME_USDT  = float(os.getenv("MIN_VOLUME_USDT", "5000000"))
+REF_SYMBOL       = "BTC-USDT-SWAP"   # referensi clock candle 15m
+
 TF          = "15m"
 TF_MS       = 15 * 60_000
 MONITOR_TF  = "5m"
 MONITOR_MS  = 5  * 60_000
-HISTORY_BARS = 300          # cukup untuk EMA200 + swing detection
+HISTORY_BARS = 300
 MIN_BARS     = 100
 
 # --- EMA ---
@@ -78,14 +81,16 @@ SWING_LEN  = 3
 # --- RR & risiko ---
 MIN_RR           = 2.0
 TARGET_RR        = float(os.getenv("TARGET_RR", "2.0"))
-MAX_OPEN         = int(os.getenv("MAX_OPEN", "3"))          # maks 3 posisi (total risiko 3%)
+MAX_OPEN                    = int(os.getenv("MAX_OPEN", "3"))
+MAX_OPEN_PER_DIRECTION      = int(os.getenv("MAX_OPEN_PER_DIRECTION", "2"))
+MAX_NEW_PER_CANDLE          = int(os.getenv("MAX_NEW_PER_CANDLE", "3"))
+COOLDOWN_HOURS_PER_SYMBOL   = float(os.getenv("COOLDOWN_HOURS", "4"))
 RISK_PER_TRADE   = float(os.getenv("RISK_PER_TRADE", "0.01"))   # 1% per posisi
 ACCOUNT_EQUITY   = float(os.getenv("ACCOUNT_EQUITY", "1000"))
 FEE_PER_SIDE     = float(os.getenv("FEE_PER_SIDE", "0.0005"))
 MIN_SL_PCT       = 0.003    # SL minimal 0.3% dari harga (menghindari fee habiskan R)
 
-# --- Cooldown & monitoring ---
-COOLDOWN_HOURS   = 4
+COOLDOWN_HOURS   = COOLDOWN_HOURS_PER_SYMBOL
 MONITOR_MAX_BARS = 1400
 
 # --- Runtime ---
@@ -194,6 +199,30 @@ def _safe(text):
 
 # ================= MARKET DATA =================
 
+def top_pairs():
+    """Ambil top N USDT perpetual OKX berdasarkan volume 24h."""
+    d = api("/api/v5/market/tickers", {"instType": "SWAP"})
+    if not d:
+        return [REF_SYMBOL]
+    pairs = []
+    for x in d.get("data", []):
+        inst = x.get("instId", "")
+        if not inst.endswith("-USDT-SWAP"):
+            continue
+        try:
+            v = float(x.get("volCcy24h", 0))
+        except:
+            continue
+        if v >= MIN_VOLUME_USDT:
+            pairs.append((inst, v))
+    pairs.sort(key=lambda x: x[1], reverse=True)
+    result = [p[0] for p in pairs[:TOP_PAIRS]]
+    # Pastikan REF_SYMBOL selalu masuk
+    if REF_SYMBOL not in result:
+        result.insert(0, REF_SYMBOL)
+    log.info("Top %s pairs: %s", TOP_PAIRS, result)
+    return result
+
 def candles(inst, bar, needed):
     """Ambil confirmed candles OKX, oldest→newest."""
     found = {}
@@ -231,22 +260,30 @@ def candles(inst, bar, needed):
     return out[-needed:]
 
 def latest_candle_ts():
-    cs = candles(SYMBOL, TF, 3)
+    cs = candles(REF_SYMBOL, TF, 3)
     return cs[-1][0] if cs else None
 
-def current_price():
-    d = api("/api/v5/market/ticker", {"instId": SYMBOL})
+def current_price(inst):
+    d = api("/api/v5/market/ticker", {"instId": inst})
     try:
         return float(d["data"][0]["last"])
     except:
         return None
 
-def tick_size():
-    d = api("/api/v5/public/instruments", {"instType": "SWAP", "instId": SYMBOL})
-    try:
-        return float(d["data"][0]["tickSz"])
-    except:
-        return 0.01
+def get_tick_sizes(pairs):
+    """Ambil tickSz semua pair sekaligus."""
+    d = api("/api/v5/public/instruments", {"instType": "SWAP"})
+    out = {}
+    if not d:
+        return out
+    for x in d.get("data", []):
+        inst = x.get("instId", "")
+        if inst in pairs:
+            try:
+                out[inst] = float(x.get("tickSz", "0.01"))
+            except:
+                out[inst] = 0.01
+    return out
 
 def tick_round(x, tick):
     if tick <= 0:
@@ -733,7 +770,7 @@ def calc_sl_tp(cs, bias, highs, lows, atr_val, tick):
         tick_round(entry, tick),
         tick_round(sl_raw, tick),
         tick_round(tp_raw, tick),
-        rr,
+        round(rr, 2),
         sl_atr,
         risk_pct
     )
@@ -746,9 +783,9 @@ def _rej(stage, detail):
     REJECT_LOG.append(f"{stage}: {detail}")
     return None
 
-def build_tapte_signal(cs):
+def build_tapte_signal(cs, inst=REF_SYMBOL, tick=0.1):
     """
-    Jalankan urutan TAPTE pada candle BTC 15m.
+    Jalankan urutan TAPTE pada candle 15m untuk pair `inst`.
     Returns signal dict atau None.
     """
     REJECT_LOG.clear()
@@ -823,8 +860,8 @@ def build_tapte_signal(cs):
     sk_val = stoch_k[i]
 
     return {
-        "signal_id"        : f"{SYMBOL}|{direction}|{cs[-1][0]}|TAPTE",
-        "symbol"           : SYMBOL,
+        "signal_id"        : f"{inst}|{direction}|{cs[-1][0]}|TAPTE",
+        "symbol"           : inst,
         "direction"        : direction,
         "timeframe"        : TF,
         "setup"            : "TAPTE",
@@ -963,7 +1000,7 @@ def running_report(h):
         return
     blocks, rs = [], []
     for t in h["open"]:
-        p = current_price()
+        p = current_price(t["symbol"])
         if p is None:
             continue
         r = float_r(t, p)
@@ -1063,8 +1100,14 @@ def signal_message(s):
 
 # ================= SCAN =================
 
+def _n_dir(h, direction):
+    return sum(1 for x in h["open"] if x.get("direction") == direction)
+
+def _symbol_open(h, inst):
+    return any(x.get("symbol") == inst for x in h["open"])
+
 def scan(h):
-    """Scan BTC-USDT-SWAP 15m dengan strategi TAPTE. Returns jumlah sinyal baru."""
+    """Scan top N pair 15m dengan strategi TAPTE. Returns jumlah sinyal baru."""
     ref = latest_candle_ts()
     if ref is not None and h.get("last_candle") == ref:
         log.info("Candle %s belum baru — scan dilewati.", iso(ref))
@@ -1076,36 +1119,72 @@ def scan(h):
             h["last_candle"] = ref
         return 0
 
-    cs = candles(SYMBOL, TF, HISTORY_BARS)
-    if len(cs) < MIN_BARS:
-        log.warning("Data kurang: %s candle.", len(cs))
-        return 0
+    pairs     = top_pairs()
+    tick_map  = get_tick_sizes(pairs)
+    created   = 0
 
-    if ref is not None and cs[-1][0] != ref:
-        log.info("Candle terakhir tidak sinkron dengan referensi.")
-        return 0
+    log.info("TAPTE scan %s pairs %s...", len(pairs), TF)
 
-    log.info("TAPTE scan BTC-USDT-SWAP %s...", TF)
-    REJECT_LOG.clear()
+    for inst in pairs:
+        # Cek batas portfolio
+        if len(h["open"]) >= MAX_OPEN:
+            log.info("Max posisi (%s) tercapai — berhenti scan.", MAX_OPEN)
+            break
+        if MAX_NEW_PER_CANDLE > 0 and created >= MAX_NEW_PER_CANDLE:
+            log.info("Max sinyal per candle (%s) tercapai.", MAX_NEW_PER_CANDLE)
+            break
+        if (MAX_OPEN_PER_DIRECTION > 0
+                and _n_dir(h, "LONG")  >= MAX_OPEN_PER_DIRECTION
+                and _n_dir(h, "SHORT") >= MAX_OPEN_PER_DIRECTION):
+            log.info("Kedua arah sudah penuh (%s) — berhenti scan.", MAX_OPEN_PER_DIRECTION)
+            break
 
-    sig = build_tapte_signal(cs)
+        # Skip jika pair sudah punya posisi terbuka
+        if _symbol_open(h, inst):
+            continue
+
+        try:
+            cs = candles(inst, TF, HISTORY_BARS)
+            if len(cs) < MIN_BARS:
+                log.debug("%s: data kurang (%s candle)", inst, len(cs))
+                continue
+
+            # Candle tidak sinkron dengan referensi clock (pair kurang likuid)
+            if ref is not None and cs[-1][0] != ref:
+                log.debug("%s: candle tidak sinkron", inst)
+                continue
+
+            tick = tick_map.get(inst, 0.01)
+            sig  = build_tapte_signal(cs, inst=inst, tick=tick)
+
+            if sig is None:
+                log.info("%s: tidak ada sinyal — %s", inst, " → ".join(REJECT_LOG))
+                continue
+
+            if is_blocked(h, sig):
+                log.info("%s: diblokir (duplikat/cooldown)", inst)
+                continue
+
+            if (MAX_OPEN_PER_DIRECTION > 0
+                    and _n_dir(h, sig["direction"]) >= MAX_OPEN_PER_DIRECTION):
+                log.info("%s: arah %s sudah %s posisi", inst, sig["direction"], MAX_OPEN_PER_DIRECTION)
+                continue
+
+            h["open"].append(sig)
+            save_history(h)
+            created += 1
+            log.info("SINYAL BARU %s %s RR=1:%.2f", inst, sig["direction"], sig["rr"])
+            tg(signal_message(sig))
+            time.sleep(0.3)
+
+        except Exception as e:
+            log.exception("Scan error %s: %s", inst, e)
 
     if ref is not None:
         h["last_candle"] = ref
 
-    if sig is None:
-        log.info("Tidak ada sinyal. Alasan: %s", " → ".join(REJECT_LOG))
-        return 0
-
-    if is_blocked(h, sig):
-        log.info("Sinyal diblokir (duplikat / cooldown / posisi open).")
-        return 0
-
-    h["open"].append(sig)
-    save_history(h)
-    log.info("SINYAL BARU %s %s RR=1:%.2f", sig["symbol"], sig["direction"], sig["rr"])
-    tg(signal_message(sig))
-    return 1
+    log.info("Scan selesai. Pairs: %s | Sinyal baru: %s", len(pairs), created)
+    return created
 
 # ================= MAIN =================
 
@@ -1113,7 +1192,7 @@ def main():
     global TELEGRAM
 
     log.info("==========================================")
-    log.info("ALPHAQUANT V6.0 — BTC TAPTE 15m")
+    log.info("ALPHAQUANT V6.1 — TOP %s PAIRS TAPTE 15m", TOP_PAIRS)
     log.info("==========================================")
 
     if not TOKEN or not CHAT_ID:
@@ -1141,12 +1220,13 @@ def main():
     if TELEGRAM and h.get("last_online_day") != today:
         h["last_online_day"] = today
         tg(
-            "<b>🟢 ALPHAQUANT V6.0 ONLINE</b>\n"
+            "<b>🟢 ALPHAQUANT V6.1 ONLINE</b>\n"
             "━━━━━━━━━━━━━━━━━━\n"
-            f"Strategi : T-A-P-T-E 15m (BTC-USDT-SWAP)\n"
+            f"Strategi : T-A-P-T-E 15m · Top {TOP_PAIRS} pair USDT OKX\n"
             f"Filter   : Tren → Area → Pattern → Trigger → Exit\n"
             f"Indikator: EMA13/21, Supertrend, Bollinger MA20, Stochastic 5-3-3\n"
-            f"RR min   : 1:{MIN_RR:.1f} | Risiko maks 1% per trade | Maks {MAX_OPEN} posisi\n"
+            f"RR min   : 1:{MIN_RR:.1f} | Risiko maks 1% per trade\n"
+            f"Maks {MAX_OPEN} posisi ({MAX_OPEN_PER_DIRECTION}/arah, {MAX_NEW_PER_CANDLE} baru/candle)\n"
             "Signal-only · 24 jam non-stop"
         )
 
@@ -1189,3 +1269,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
