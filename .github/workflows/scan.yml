@@ -64,4 +64,3 @@ jobs:
             git commit -m "update signals history [skip ci]"
             git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
             git push origin "HEAD:${GITHUB_REF_NAME}"
-          fi
