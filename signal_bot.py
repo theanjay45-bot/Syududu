@@ -78,19 +78,33 @@ SWING_LEN  = 3
 
 # --- RR & risiko ---
 MIN_RR           = 2.0
-TARGET_RR        = float(os.getenv("TARGET_RR", "2.0"))
+def _env_float(key, default):
+    v = os.getenv(key, "").strip()
+    try:
+        return float(v) if v else default
+    except ValueError:
+        return default
+
+TARGET_RR        = _env_float("TARGET_RR", 2.0)
 MAX_OPEN         = 1   # BTC-only: cukup 1 posisi aktif
-COOLDOWN_HOURS_PER_SYMBOL = float(os.getenv("COOLDOWN_HOURS", "4"))
-RISK_PER_TRADE   = float(os.getenv("RISK_PER_TRADE", "0.01"))   # 1% per posisi
-ACCOUNT_EQUITY   = float(os.getenv("ACCOUNT_EQUITY", "1000"))
-FEE_PER_SIDE     = float(os.getenv("FEE_PER_SIDE", "0.0005"))
+COOLDOWN_HOURS_PER_SYMBOL = _env_float("COOLDOWN_HOURS", 4.0)
+RISK_PER_TRADE   = _env_float("RISK_PER_TRADE", 0.01)   # 1% per posisi
+ACCOUNT_EQUITY   = _env_float("ACCOUNT_EQUITY", 1000.0)
+FEE_PER_SIDE     = _env_float("FEE_PER_SIDE", 0.0005)
 MIN_SL_PCT       = 0.003    # SL minimal 0.3% dari harga (menghindari fee habiskan R)
 
 COOLDOWN_HOURS   = COOLDOWN_HOURS_PER_SYMBOL
 MONITOR_MAX_BARS = 1400
 
 # --- Runtime ---
-SCAN_INTERVAL = int(os.getenv("SCAN_INTERVAL", "60"))
+def _env_int(key, default):
+    v = os.getenv(key, "").strip()
+    try:
+        return int(v) if v else default
+    except ValueError:
+        return default
+
+SCAN_INTERVAL = _env_int("SCAN_INTERVAL", 60)
 _RF = os.getenv("RUN_FOREVER", "").strip()
 RUN_FOREVER = (_RF == "1") if _RF else (os.getenv("GITHUB_ACTIONS", "").strip().lower() != "true")
 HISTORY_FILE = os.getenv("SIGNAL_HISTORY_FILE", "signals_history.json")
@@ -98,7 +112,7 @@ TIMEOUT  = 15
 RETRIES  = 3
 MIN_REQUEST_GAP = 0.09
 
-REPORT_EVERY_HOURS = float(os.getenv("REPORT_EVERY_HOURS", "4"))
+REPORT_EVERY_HOURS = _env_float("REPORT_EVERY_HOURS", 4.0)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -1248,6 +1262,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
