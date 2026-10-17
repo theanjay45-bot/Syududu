@@ -750,7 +750,7 @@ def _rej(stage, detail):
     REJECT_LOG.append(f"{stage}: {detail}")
     return None
 
-def build_tapte_signal(cs, inst=REF_SYMBOL, tick=0.1):
+def build_tapte_signal(cs, inst=SYMBOL, tick=0.1):
     """
     Jalankan urutan TAPTE pada candle 15m untuk pair `inst`.
     Returns signal dict atau None.
@@ -1248,6 +1248,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
