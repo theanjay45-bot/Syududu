@@ -30,21 +30,15 @@ jobs:
 
       - name: Run signal bot
         env:
-          # ── SECRETS (Settings > Secrets and variables > Actions > Secrets) ──
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-
-          # ── VARIABLES (Settings > Secrets and variables > Actions > Variables) ──
           TARGET_RR: ${{ vars.TARGET_RR }}
-          MAX_OPEN: ${{ vars.MAX_OPEN }}
           RISK_PER_TRADE: ${{ vars.RISK_PER_TRADE }}
           ACCOUNT_EQUITY: ${{ vars.ACCOUNT_EQUITY }}
           FEE_PER_SIDE: ${{ vars.FEE_PER_SIDE }}
           REPORT_EVERY_HOURS: ${{ vars.REPORT_EVERY_HOURS }}
-
-          # ── FIXED ──
           RUN_FOREVER: "0"
           SIGNAL_HISTORY_FILE: signals_history.json
         run: python signal_bot.py
@@ -63,3 +57,4 @@ jobs:
             git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
+
