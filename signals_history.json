@@ -1,38 +1,5 @@
 {
-  "open": [
-    {
-      "signal_id": "BTC-USDT-SWAP|SHORT|1792240200000|TAPTE",
-      "symbol": "BTC-USDT-SWAP",
-      "direction": "SHORT",
-      "timeframe": "15m",
-      "setup": "TAPTE",
-      "note": "Tren: BEAR (5/5) | Struktur LH+LL ✓ | Harga < EMA13 < EMA21 ✓ | Supertrend merah ✓ | Harga < BB MA20 ✓\nArea: SwingHigh@81608.4\nPattern: bear_flag (Bear flag breakdown close 81497.4)\nTrigger: Tweezer Top",
-      "signal_candle_time": 1792240200000,
-      "signal_candle_iso": "2026-10-17T12:30:00+00:00",
-      "created_at": "2026-10-17T12:45:59.965387+00:00",
-      "entry": 81497.4,
-      "sl": 81761.2,
-      "tp": 80969.8,
-      "rr": 2.0,
-      "atr": 66.3723,
-      "sl_atr": 3.97,
-      "risk_pct": 0.32,
-      "trend_bias": "BEAR",
-      "trend_score": 5,
-      "area_level": "SwingHigh@81608.4",
-      "pattern": "bear_flag",
-      "trigger": "Tweezer Top",
-      "stoch_k": 13.9,
-      "ema_fast": 81565.1,
-      "ema_slow": 81578.69,
-      "risk_usdt": 10.0,
-      "status": "OPEN",
-      "exit_price": null,
-      "exit_time": null,
-      "result_r": null,
-      "result": null
-    }
-  ],
+  "open": [],
   "closed": [
     {
       "signal_id": "ZIL-USDT-SWAP|SHORT|1792239300000|TAPTE",
@@ -417,9 +384,41 @@
       "exit_time": "2026-10-17T20:45:00+00:00",
       "result_r": 2.0,
       "result": "WIN"
+    },
+    {
+      "signal_id": "BTC-USDT-SWAP|SHORT|1792240200000|TAPTE",
+      "symbol": "BTC-USDT-SWAP",
+      "direction": "SHORT",
+      "timeframe": "15m",
+      "setup": "TAPTE",
+      "note": "Tren: BEAR (5/5) | Struktur LH+LL ✓ | Harga < EMA13 < EMA21 ✓ | Supertrend merah ✓ | Harga < BB MA20 ✓\nArea: SwingHigh@81608.4\nPattern: bear_flag (Bear flag breakdown close 81497.4)\nTrigger: Tweezer Top",
+      "signal_candle_time": 1792240200000,
+      "signal_candle_iso": "2026-10-17T12:30:00+00:00",
+      "created_at": "2026-10-17T12:45:59.965387+00:00",
+      "entry": 81497.4,
+      "sl": 81761.2,
+      "tp": 80969.8,
+      "rr": 2.0,
+      "atr": 66.3723,
+      "sl_atr": 3.97,
+      "risk_pct": 0.32,
+      "trend_bias": "BEAR",
+      "trend_score": 5,
+      "area_level": "SwingHigh@81608.4",
+      "pattern": "bear_flag",
+      "trigger": "Tweezer Top",
+      "stoch_k": 13.9,
+      "ema_fast": 81565.1,
+      "ema_slow": 81578.69,
+      "risk_usdt": 10.0,
+      "status": "CLOSED",
+      "exit_price": 80969.8,
+      "exit_time": "2026-10-17T21:35:00+00:00",
+      "result_r": 2.0,
+      "result": "WIN"
     }
   ],
   "last_online_day": "2026-10-17",
   "last_report_ts": 1792268097.8197768,
-  "last_candle": 1792270800000
+  "last_candle": 1792272600000
 }
