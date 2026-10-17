@@ -42,7 +42,7 @@ jobs:
           SIGNAL_HISTORY_FILE: signals_history.json
           # Strategi TAPTE
           TARGET_RR: "2.0"
-          MAX_OPEN: "3"
+          MAX_OPEN: "10"
           # Risiko
           RISK_PER_TRADE: "0.01"
           ACCOUNT_EQUITY: "1000"
