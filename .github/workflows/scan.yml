@@ -1,12 +1,10 @@
 name: scan
 
-# Jadwal cron GitHub tiap 15 menit (sejajar dengan candle 15m) + bisa dijalankan manual.
 on:
   schedule:
     - cron: "*/15 * * * *"
   workflow_dispatch:
 
-# Satu run pada satu waktu supaya signals_history.json tidak bentrok.
 concurrency:
   group: scan
   cancel-in-progress: false
@@ -32,23 +30,23 @@ jobs:
 
       - name: Run signal bot
         env:
-          # Telegram (isi lewat Settings > Secrets and variables > Actions)
+          # ── SECRETS (Settings > Secrets and variables > Actions > Secrets) ──
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          # Mode: satu siklus per run
+
+          # ── VARIABLES (Settings > Secrets and variables > Actions > Variables) ──
+          TARGET_RR: ${{ vars.TARGET_RR }}
+          MAX_OPEN: ${{ vars.MAX_OPEN }}
+          RISK_PER_TRADE: ${{ vars.RISK_PER_TRADE }}
+          ACCOUNT_EQUITY: ${{ vars.ACCOUNT_EQUITY }}
+          FEE_PER_SIDE: ${{ vars.FEE_PER_SIDE }}
+          REPORT_EVERY_HOURS: ${{ vars.REPORT_EVERY_HOURS }}
+
+          # ── FIXED ──
           RUN_FOREVER: "0"
           SIGNAL_HISTORY_FILE: signals_history.json
-          # Strategi TAPTE
-          TARGET_RR: "2.0"
-          MAX_OPEN: "10"
-          # Risiko
-          RISK_PER_TRADE: "0.01"
-          ACCOUNT_EQUITY: "1000"
-          FEE_PER_SIDE: "0.0005"
-          # Laporan periodik
-          REPORT_EVERY_HOURS: "4"
         run: python signal_bot.py
 
       - name: Commit history
@@ -64,3 +62,4 @@ jobs:
             git commit -m "update signals history [skip ci]"
             git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
             git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
