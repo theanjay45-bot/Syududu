@@ -1,1 +1,67 @@
+name: scan
 
+# Jadwal cron GitHub tiap 15 menit (sejajar dengan candle 15m) + bisa dijalankan manual.
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+# Satu run pada satu waktu supaya signals_history.json tidak bentrok.
+concurrency:
+  group: scan
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run signal bot
+        env:
+          # Telegram (isi lewat Settings > Secrets and variables > Actions)
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          # Mode: satu siklus per run
+          RUN_FOREVER: "0"
+          SIGNAL_HISTORY_FILE: signals_history.json
+          # Strategi TAPTE
+          TARGET_RR: "2.0"
+          MAX_OPEN: "3"
+          # Risiko
+          RISK_PER_TRADE: "0.01"
+          ACCOUNT_EQUITY: "1000"
+          FEE_PER_SIDE: "0.0005"
+          # Laporan periodik
+          REPORT_EVERY_HOURS: "4"
+        run: python signal_bot.py
+
+      - name: Commit history
+        if: always()
+        run: |
+          [ -f signals_history.json ] || exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add signals_history.json
+          if git diff --cached --quiet; then
+            echo "Tidak ada perubahan history."
+          else
+            git commit -m "update signals history [skip ci]"
+            git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
