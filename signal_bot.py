@@ -1,5 +1,5 @@
 """
-ALPHAQUANT V6.2
+ALPHAQUANT V6.3
 Strategi: T-A-P-T-E (Trend → Area → Pattern → Trigger → Exit)
 Berdasarkan: Checklist Trading Crypto 1H (Akademi Crypto - Crypto Trading Guide hlm. 138-139)
 Pair   : BTC-USDT-SWAP (eksklusif)
@@ -8,15 +8,19 @@ Mode   : Signal-only → Telegram
 
 === URUTAN WAJIB ===
 1. TREND   : Market structure (HH/HL atau LH/LL) + EMA13/21 + Supertrend + Bollinger MA20
-2. AREA    : Support/Resistance horizontal, trendline, EMA dynamic, Fibonacci 0.5-0.618 golden pocket
-3. PATTERN : Konfirmasi: bull/bear flag, pennant, triangle, H&S, double top/bottom, wedge
-4. TRIGGER : Candlestick (hammer, engulfing, tweezer) + Stochastic 5-3-3 cross oversold/overbought
+             Bias: LONG diutamakan. SHORT hanya bila semua konfirmator bear.
+2. AREA    : Support/Resistance horizontal + EMA dinamis + Fibonacci 0.5-0.618 golden pocket
+             + S/R flip (bekas resistance jadi support) + liquidity grab
+3. PATTERN : Konfirmasi: bull/bear flag, pennant, double top/bottom, ascending/descending triangle
+             Bear patterns (bear flag, rising wedge, dll.) = hindari untuk LONG
+4. TRIGGER : Candlestick (hammer, engulfing, tweezer) + Stochastic 5-3-3 cross di zona OS/OB ketat
+             + volume memadai untuk breakout
 5. EXIT    : SL di bawah HL/support (long) atau di atas LH/resistance (short), ATR-adjusted
              TP di resistance terdekat (long) atau support terdekat (short), RR min 1:2
 
 === MONEY MANAGEMENT ===
 - Risiko maks 1% modal per posisi
-- Maks 3 posisi bersamaan (total risiko 3%)
+- Maks 1 posisi BTC-only
 """
 
 from __future__ import annotations
@@ -118,9 +122,9 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(message)s"
 )
-log = logging.getLogger("V6.2")
+log = logging.getLogger("V6.3")
 S = requests.Session()
-S.headers.update({"User-Agent": "ALPHAQUANT-V6.2"})
+S.headers.update({"User-Agent": "ALPHAQUANT-V6.3"})
 TELEGRAM = bool(TOKEN and CHAT_ID)
 
 # ================= HELPERS =================
@@ -474,44 +478,83 @@ def check_trend(cs, ema_fast, ema_slow, ema_mid, st_list, highs, lows):
 
 # ================= STEP 2: AREA =================
 
-def find_key_levels(cs, highs, lows, atr_val):
+def find_key_levels(cs, highs, lows, atr_val, ema_fast=None, ema_slow=None, st_list=None):
     """
-    Kumpulkan level kunci: swing highs/lows terbaru + Fibonacci golden pocket.
+    Kumpulkan level kunci:
+    - Swing highs/lows horizontal
+    - Fibonacci golden pocket 0.5–0.618
+    - EMA13/21 dinamis sebagai area support/resistance
+    - Supertrend line sebagai area dinamis
+    - S/R flip: bekas resistance yang ditembus → jadi support (dan sebaliknya)
     Returns: (supports, resistances) masing-masing list of (level, label)
     """
     close = cs[-1][4]
-    tol   = atr_val * 0.5   # toleransi pengelompokan level
+    i     = len(cs) - 1
+    tol   = atr_val * 0.5
 
     supports    = []
     resistances = []
 
-    # Swing lows = support potensial
+    # 1) Swing lows = support, swing highs = resistance
     for idx, p in lows[-6:]:
         if p < close:
             supports.append((p, f"SwingLow@{p:.1f}"))
 
-    # Swing highs = resistance potensial
     for idx, p in highs[-6:]:
         if p > close:
             resistances.append((p, f"SwingHigh@{p:.1f}"))
 
-    # Fibonacci golden pocket (0.5–0.618) dari swing terbaru
+    # 2) Fibonacci golden pocket (0.5–0.618) dari swing terbaru
     if highs and lows:
         last_h = highs[-1][1]
         last_l = lows[-1][1]
         swing  = last_h - last_l
         if swing > 0:
-            fib50  = last_h - FIB_LOW  * swing
-            fib618 = last_h - FIB_HIGH * swing
+            fib50   = last_h - FIB_LOW  * swing
+            fib618  = last_h - FIB_HIGH * swing
             fib_mid = (fib50 + fib618) / 2
             if fib_mid < close:
                 supports.append((fib_mid, f"Fib50-618@{fib_mid:.1f}"))
             else:
                 resistances.append((fib_mid, f"Fib50-618@{fib_mid:.1f}"))
 
-    # EMA dinamis sebagai support/resistance
-    ema_fast_val = None
-    # Akan diisi dari konteks pemanggil
+    # 3) EMA dinamis sebagai area support/resistance
+    if ema_fast and ema_fast[i] is not None:
+        ef = ema_fast[i]
+        if ef < close:
+            supports.append((ef, f"EMA13@{ef:.1f}"))
+        else:
+            resistances.append((ef, f"EMA13@{ef:.1f}"))
+
+    if ema_slow and ema_slow[i] is not None:
+        es = ema_slow[i]
+        if es < close:
+            supports.append((es, f"EMA21@{es:.1f}"))
+        else:
+            resistances.append((es, f"EMA21@{es:.1f}"))
+
+    # 4) Supertrend line sebagai area dinamis
+    if st_list and st_list[i][0] is not None:
+        st_val, st_dir = st_list[i]
+        if st_dir == 1:   # bullish → ST di bawah harga = support
+            supports.append((st_val, f"Supertrend@{st_val:.1f}"))
+        else:             # bearish → ST di atas harga = resistance
+            resistances.append((st_val, f"Supertrend@{st_val:.1f}"))
+
+    # 5) S/R flip: cari swing high lama yang sudah ditembus harga ke atas
+    #    → level itu kini jadi support (flip)
+    for idx, p in highs[-10:]:
+        if p < close and abs(close - p) <= atr_val * 3:
+            # Bekas resistance yang sudah ditembus = support baru
+            supports.append((p, f"FlipSupport@{p:.1f}"))
+            break  # ambil yang paling dekat saja
+
+    for idx, p in lows[-10:]:
+        if p > close and abs(p - close) <= atr_val * 3:
+            # Bekas support yang sudah ditembus ke bawah = resistance baru
+            resistances.append((p, f"FlipResist@{p:.1f}"))
+            break
+
     return supports, resistances
 
 def price_near_level(price_val, levels, atr_val, factor=1.5):
@@ -521,6 +564,46 @@ def price_near_level(price_val, levels, atr_val, factor=1.5):
             return True, lvl, lbl
     return False, None, None
 
+def detect_liquidity_grab(cs, bias, atr_val):
+    """
+    Liquidity grab: candle menyodok keluar area (spike melampaui swing) lalu
+    cepat kembali ke dalam. Artinya: arah berlawanan dengan sodokan.
+    - BULL signal: spike ke bawah swing low tapi close kembali di atas → bullish grab
+    - BEAR signal: spike ke atas swing high tapi close kembali di bawah → bearish grab
+    Returns: (detected: bool, detail: str)
+    """
+    if len(cs) < 5:
+        return False, ""
+
+    c    = cs[-1]   # candle terbaru
+    c1   = cs[-2]   # sebelumnya
+
+    # Window 10 bar terakhir (diluar candle terbaru)
+    window = cs[-11:-1]
+    if len(window) < 5:
+        return False, ""
+
+    recent_lows  = [x[3] for x in window]
+    recent_highs = [x[2] for x in window]
+    swing_low    = min(recent_lows)
+    swing_high   = max(recent_highs)
+
+    if bias == "BULL":
+        # Spike ke bawah swing low, tapi close kembali di atas swing low
+        spiked_down = c[3] < swing_low - atr_val * 0.1
+        recovered   = c[4] > swing_low
+        if spiked_down and recovered:
+            return True, f"Liquidity grab bawah (spike {c[3]:.1f} < low {swing_low:.1f}, close {c[4]:.1f})"
+
+    elif bias == "BEAR":
+        # Spike ke atas swing high, tapi close kembali di bawah swing high
+        spiked_up  = c[2] > swing_high + atr_val * 0.1
+        recovered  = c[4] < swing_high
+        if spiked_up and recovered:
+            return True, f"Liquidity grab atas (spike {c[2]:.1f} > high {swing_high:.1f}, close {c[4]:.1f})"
+
+    return False, ""
+
 # ================= STEP 3: PATTERN =================
 
 BULL_PATTERNS = {"bull_flag", "bull_pennant", "ascending_triangle", "double_bottom",
@@ -528,11 +611,19 @@ BULL_PATTERNS = {"bull_flag", "bull_pennant", "ascending_triangle", "double_bott
 BEAR_PATTERNS = {"bear_flag", "bear_pennant", "descending_triangle", "double_top",
                  "triple_top", "head_shoulders", "rising_wedge_breakout"}
 
+# Pola yang MELARANG entry LONG (sesuai buku: hindari untuk buy)
+BEAR_BLOCK_PATTERNS = {"bear_flag", "bear_pennant", "descending_triangle",
+                       "rising_wedge", "double_top", "triple_top", "head_shoulders"}
+
 def detect_pattern(cs, bias, atr_val):
     """
-    Deteksi pola sederhana (berbasis price action terbaru).
+    Deteksi pola price action.
     Returns: (pattern_name | None, detail)
-    Pola kompleks (H&S lengkap) butuh banyak bar; di sini deteksi ringkas.
+
+    Sesuai buku:
+    - BULL bias: bull flag, pennant, ascending triangle, double/triple bottom, falling wedge
+    - BEAR bias: bear flag, pennant, descending triangle, double/triple top, H&S, rising wedge
+    - Jika ditemukan BEAR_BLOCK_PATTERNS saat bias BULL → tolak sinyal
     """
     n = len(cs)
     if n < 20:
@@ -542,47 +633,82 @@ def detect_pattern(cs, bias, atr_val):
     highs  = [c[2] for c in cs]
     lows   = [c[3] for c in cs]
 
-    # Window 20 bar terakhir
     w = 20
-    c_w  = closes[-w:]
-    h_w  = highs[-w:]
-    l_w  = lows[-w:]
+    c_w = closes[-w:]
+    h_w = highs[-w:]
+    l_w = lows[-w:]
 
-    highest = max(h_w)
-    lowest  = min(l_w)
-    rng     = highest - lowest
+    highest    = max(h_w)
+    lowest     = min(l_w)
+    rng        = highest - lowest
     if rng <= 0:
         return None, "range nol"
 
-    last_close  = closes[-1]
-    prev_close  = closes[-2]
-    prev2_close = closes[-3]
+    last_close = closes[-1]
 
-    # --- Bull flag: rally → konsolidasi turun pendek → breakout naik ---
     if bias == "BULL":
-        # Rally di 10 bar awal window
-        rally_end = closes[-w + 10]
+        # Bull flag: rally awal → konsolidasi turun → breakout ke atas
+        rally_end  = closes[-w + 10]
         consol_low = min(lows[-10:])
-        if rally_end > closes[-w] and consol_low > closes[-w] and last_close > max(closes[-10:-1]):
-            return "bull_flag", f"Bull flag breakout close {last_close:.1f}"
+        if (rally_end > closes[-w] and consol_low > closes[-w]
+                and last_close > max(closes[-10:-1])):
+            return "bull_flag", f"Bull flag breakout {last_close:.1f}"
 
-        # Double bottom: dua lows dalam ATR 1x satu sama lain
-        recent_lows = sorted(lows[-15:])
-        if abs(recent_lows[0] - recent_lows[1]) < atr_val:
-            return "double_bottom", f"Double bottom ~{recent_lows[0]:.1f}"
+        # Ascending triangle: highs datar, lows naik
+        top_range  = max(h_w[-10:]) - min(h_w[-10:])
+        bot_rise   = lows[-1] > lows[-10] if len(lows) >= 10 else False
+        if top_range < atr_val * 0.8 and bot_rise:
+            return "ascending_triangle", f"Ascending triangle (top flat, lows naik)"
 
-    # --- Bear flag: drop → konsolidasi naik pendek → breakdown ---
-    if bias == "BEAR":
-        drop_end = closes[-w + 10]
+        # Double bottom: dua swing low berdekatan
+        recent_lows_sorted = sorted(lows[-15:])
+        if len(recent_lows_sorted) >= 2 and abs(recent_lows_sorted[0] - recent_lows_sorted[1]) < atr_val * 0.8:
+            return "double_bottom", f"Double bottom ~{recent_lows_sorted[0]:.1f}"
+
+        # Falling wedge: highs dan lows keduanya turun, tapi lows lebih landai
+        if len(h_w) >= 10 and len(l_w) >= 10:
+            h_slope = (h_w[-1] - h_w[0]) / len(h_w)
+            l_slope = (l_w[-1] - l_w[0]) / len(l_w)
+            if h_slope < 0 and l_slope < 0 and l_slope > h_slope * 0.5:
+                return "falling_wedge", f"Falling wedge (konvergen turun)"
+
+        # Cek bear patterns yang melarang entry LONG
+        drop_end    = closes[-w + 10]
         consol_high = max(highs[-10:])
-        if drop_end < closes[-w] and consol_high < closes[-w] and last_close < min(closes[-10:-1]):
-            return "bear_flag", f"Bear flag breakdown close {last_close:.1f}"
+        if (drop_end < closes[-w] and consol_high < closes[-w]
+                and last_close < min(closes[-10:-1])):
+            return "bear_flag", f"BEAR FLAG terdeteksi — hindari LONG"
 
-        recent_highs = sorted(highs[-15:], reverse=True)
-        if abs(recent_highs[0] - recent_highs[1]) < atr_val:
-            return "double_top", f"Double top ~{recent_highs[0]:.1f}"
+        recent_highs_sorted = sorted(highs[-15:], reverse=True)
+        if len(recent_highs_sorted) >= 2 and abs(recent_highs_sorted[0] - recent_highs_sorted[1]) < atr_val * 0.8:
+            return "double_top", f"DOUBLE TOP terdeteksi — hindari LONG"
 
-    # Tidak ada pola yang terdeteksi — masih bisa lanjut bila trigger kuat
+    elif bias == "BEAR":
+        # Bear flag: drop → konsolidasi naik → breakdown
+        drop_end    = closes[-w + 10]
+        consol_high = max(highs[-10:])
+        if (drop_end < closes[-w] and consol_high < closes[-w]
+                and last_close < min(closes[-10:-1])):
+            return "bear_flag", f"Bear flag breakdown {last_close:.1f}"
+
+        # Descending triangle: lows datar, highs turun
+        bot_range  = max(l_w[-10:]) - min(l_w[-10:])
+        top_fall   = highs[-1] < highs[-10] if len(highs) >= 10 else False
+        if bot_range < atr_val * 0.8 and top_fall:
+            return "descending_triangle", f"Descending triangle (bottom flat, highs turun)"
+
+        # Double top
+        recent_highs_sorted = sorted(highs[-15:], reverse=True)
+        if len(recent_highs_sorted) >= 2 and abs(recent_highs_sorted[0] - recent_highs_sorted[1]) < atr_val * 0.8:
+            return "double_top", f"Double top ~{recent_highs_sorted[0]:.1f}"
+
+        # Rising wedge: highs dan lows keduanya naik, tapi highs lebih landai
+        if len(h_w) >= 10 and len(l_w) >= 10:
+            h_slope = (h_w[-1] - h_w[0]) / len(h_w)
+            l_slope = (l_w[-1] - l_w[0]) / len(l_w)
+            if h_slope > 0 and l_slope > 0 and h_slope < l_slope * 0.5:
+                return "rising_wedge", f"Rising wedge (konvergen naik)"
+
     return None, "tidak ada pola terdeteksi"
 
 # ================= STEP 4: TRIGGER =================
@@ -625,61 +751,88 @@ def _is_tweezer_top(c_prev, c, atr_val):
     tol = atr_val * 0.1
     return abs(c_prev[2] - c[2]) <= tol and c[4] < c[1]
 
+def _avg_volume(cs, n=20):
+    """Volume rata-rata n candle terakhir."""
+    vols = [c[5] for c in cs[-n:] if len(c) > 5 and c[5] > 0]
+    return sum(vols) / len(vols) if vols else 0
+
 def check_trigger(cs, bias, stoch_k, stoch_d, atr_val):
     """
-    Evaluasi trigger: candlestick + stochastic.
-    Returns: triggered (bool), trigger_name (str), detail (str)
+    Evaluasi trigger sesuai buku:
+    - Candlestick: hammer, inv hammer, engulfing, tweezer
+      * Hammer hanya valid untuk BULL (lower shadow panjang → bullish)
+      * Inv Hammer (shooting star) untuk BEAR (upper shadow panjang → bearish)
+      * Tidak boleh keduanya bersamaan pada satu candle
+    - Stochastic 5-3-3: cross KETAT di zona OS (<25) atau OB (>75)
+    - Volume: candle trigger harus >= 0.8x rata-rata (memadai)
+    Returns: triggered (bool), trigger_name (str), stoch_note (str)
     """
-    i     = len(cs) - 1
-    c     = cs[i]
+    i      = len(cs) - 1
+    c      = cs[i]
     c_prev = cs[i - 1] if i > 0 else None
 
-    sk = stoch_k[i]
-    sd = stoch_d[i]
+    sk      = stoch_k[i]
+    sd      = stoch_d[i]
     sk_prev = stoch_k[i-1] if i > 0 else None
     sd_prev = stoch_d[i-1] if i > 0 else None
+
+    # Volume check
+    avg_vol  = _avg_volume(cs, 20)
+    cur_vol  = c[5] if len(c) > 5 else 0
+    vol_ok   = cur_vol >= avg_vol * 0.8 if avg_vol > 0 else True
 
     candle_triggers = []
     stoch_trigger   = False
     stoch_note      = ""
 
     if bias == "BULL":
-        # Candlestick bullish
+        # Hammer: lower shadow panjang → sinyal bullish reversal
         if _is_hammer(c, atr_val):
             candle_triggers.append("Hammer")
-        if _is_inv_hammer(c, atr_val):
-            candle_triggers.append("Inverted Hammer")
+        # Bullish Engulfing
         if c_prev and _is_bull_engulf(c_prev, c):
             candle_triggers.append("Bullish Engulfing")
+        # Tweezer Bottom
         if c_prev and _is_tweezer_bottom(c_prev, c, atr_val):
             candle_triggers.append("Tweezer Bottom")
+        # Inv Hammer untuk BULL hanya valid jika candle bullish (close > open)
+        if _is_inv_hammer(c, atr_val) and c[4] > c[1]:
+            candle_triggers.append("Inverted Hammer")
 
-        # Stochastic cross di oversold
+        # Stochastic: KETAT harus di zona oversold (K < STOCH_OS = 25)
         if (sk is not None and sd is not None and
                 sk_prev is not None and sd_prev is not None):
-            if sk_prev < sd_prev and sk > sd and sk < STOCH_OS + 15:
+            if sk_prev < sd_prev and sk > sd and sk <= STOCH_OS:
                 stoch_trigger = True
-                stoch_note    = f"Stoch cross atas (K={sk:.1f}, area oversold)"
+                stoch_note    = f"Stoch cross atas zona OS (K={sk:.1f})"
 
     elif bias == "BEAR":
-        # Candlestick bearish
+        # Bearish Engulfing
         if c_prev and _is_bear_engulf(c_prev, c):
             candle_triggers.append("Bearish Engulfing")
+        # Tweezer Top
         if c_prev and _is_tweezer_top(c_prev, c, atr_val):
             candle_triggers.append("Tweezer Top")
-        # Shooting star (inv hammer bearish)
+        # Shooting Star = Inv Hammer dengan close < open (bearish)
         if _is_inv_hammer(c, atr_val) and c[4] < c[1]:
             candle_triggers.append("Shooting Star")
 
-        # Stochastic cross di overbought
+        # Stochastic: KETAT harus di zona overbought (K > STOCH_OB = 75)
         if (sk is not None and sd is not None and
                 sk_prev is not None and sd_prev is not None):
-            if sk_prev > sd_prev and sk < sd and sk > STOCH_OB - 15:
+            if sk_prev > sd_prev and sk < sd and sk >= STOCH_OB:
                 stoch_trigger = True
-                stoch_note    = f"Stoch cross bawah (K={sk:.1f}, area overbought)"
+                stoch_note    = f"Stoch cross bawah zona OB (K={sk:.1f})"
 
-    triggered = bool(candle_triggers) or stoch_trigger
-    trigger_name = " + ".join(candle_triggers) + (" + " + stoch_note if stoch_trigger else (stoch_note or ""))
+    # Volume filter: kalau ada candle trigger tapi volume kurang → hapus
+    if candle_triggers and not vol_ok:
+        candle_triggers = []   # volume tidak memadai
+        stoch_note = (stoch_note or "") + " [vol rendah, candle trigger diabaikan]"
+
+    triggered    = bool(candle_triggers) or stoch_trigger
+    trigger_name = " + ".join(candle_triggers)
+    if stoch_trigger:
+        trigger_name = (trigger_name + " + " + stoch_note).strip(" + ")
     if not triggered:
         trigger_name = "tidak ada trigger"
 
@@ -802,7 +955,10 @@ def build_tapte_signal(cs, inst=SYMBOL, tick=0.1):
         return _rej("Tren", f"bias tidak jelas (score {t_score}/5) | {t_detail}")
 
     # === STEP 2: AREA ===
-    supports, resistances = find_key_levels(cs, highs, lows, atr_val)
+    supports, resistances = find_key_levels(
+        cs, highs, lows, atr_val,
+        ema_fast=ema_fast, ema_slow=ema_slow, st_list=st_list
+    )
     close = cs[i][4]
 
     if bias == "BULL":
@@ -810,12 +966,20 @@ def build_tapte_signal(cs, inst=SYMBOL, tick=0.1):
     else:
         near_area, lvl, lbl = price_near_level(close, resistances, atr_val, factor=2.0)
 
-    if not near_area:
+    # Cek liquidity grab sebagai area alternatif
+    liq_grab, liq_detail = detect_liquidity_grab(cs, bias, atr_val)
+    if not near_area and liq_grab:
+        near_area = True
+        lbl = f"LiqGrab ({liq_detail})"
+    elif not near_area:
         return _rej("Area", f"harga {close:.1f} tidak dekat support/resistance kunci")
 
     # === STEP 3: PATTERN ===
     pattern, p_detail = detect_pattern(cs, bias, atr_val)
-    # Pattern bukan syarat wajib, tapi dicatat
+
+    # Blokir sinyal jika ditemukan bear pattern saat bias BULL
+    if bias == "BULL" and pattern in BEAR_BLOCK_PATTERNS:
+        return _rej("Pattern", f"Bear pattern terdeteksi: {pattern} — hindari LONG")
 
     # === STEP 4: TRIGGER ===
     triggered, trigger_name, stoch_note = check_trigger(cs, bias, stoch_k, stoch_d, atr_val)
@@ -1096,7 +1260,7 @@ def stats_report(h):
     note   = "\n\n<i>< 30 trade: belum signifikan.</i>" if len(ts) < 30 else ""
 
     tg(
-        "<b>📊 ALPHAQUANT V6.0 PERFORMA</b>\n"
+        "<b>📊 ALPHAQUANT V6.3 PERFORMA</b>\n"
         "━━━━━━━━━━━━━━━━━━\n"
         f"Trade        : {len(ts)}\n"
         f"Win          : {len(wins)}\n"
@@ -1118,7 +1282,7 @@ def signal_message(s):
     note_lines = _safe(s.get("note", "")).replace("\\n", "\n")
 
     return (
-        "<b>🚨 ALPHAQUANT V6.0 SIGNAL</b>\n"
+        "<b>🚨 ALPHAQUANT V6.3 SIGNAL</b>\n"
         "━━━━━━━━━━━━━━━━━━\n"
         f"<b>{s['symbol']}</b> · <b>{s['direction']}</b> · {s['timeframe']}\n\n"
         f"{note_lines}\n\n"
@@ -1190,7 +1354,7 @@ def main():
     global TELEGRAM
 
     log.info("==========================================")
-    log.info("ALPHAQUANT V6.2 — BTC TAPTE 15m")
+    log.info("ALPHAQUANT V6.3 — BTC TAPTE 15m")
     log.info("==========================================")
 
     if not TOKEN or not CHAT_ID:
@@ -1218,11 +1382,13 @@ def main():
     if TELEGRAM and h.get("last_online_day") != today:
         h["last_online_day"] = today
         tg(
-            "<b>🟢 ALPHAQUANT V6.2 ONLINE</b>\n"
+            "<b>🟢 ALPHAQUANT V6.3 ONLINE</b>\n"
             "━━━━━━━━━━━━━━━━━━\n"
             f"Pair     : BTC-USDT-SWAP · 15m\n"
-            f"Strategi : T-A-P-T-E\n"
-            f"Indikator: EMA13/21, Supertrend, Bollinger MA20, Stochastic 5-3-3\n"
+            f"Strategi : T-A-P-T-E (Akademi Crypto)\n"
+            f"Indikator: EMA13/21, Supertrend, BB MA20, Stochastic 5-3-3\n"
+            f"Area     : Swing S/R + EMA dinamis + Fib + S/R Flip + Liq Grab\n"
+            f"Filter   : Volume, Bear Pattern Block, Stoch Zona Ketat\n"
             f"RR min   : 1:{MIN_RR:.1f} | Risiko maks 1% per trade\n"
             "Signal-only · 24 jam non-stop"
         )
@@ -1266,6 +1432,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
