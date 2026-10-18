@@ -1,10 +1,17 @@
 """
-ALPHAQUANT V6.4
+ALPHAQUANT V6.5
 Strategi: T-A-P-T-E (Trend → Area → Pattern → Trigger → Exit)
 Berdasarkan: Checklist Trading Crypto 1H (Akademi Crypto - Crypto Trading Guide hlm. 138-139)
 Pair   : 10 liquid pairs (BTC/ETH/SOL/XRP/BNB/DOGE/ADA/AVAX/LINK/DOT)
-TF     : 15m
+TF     : 15m (entry) + 1H (bias HTF)
 Mode   : Signal-only → Telegram
+
+=== CHANGELOG V6.5 ===
+- BARU: HTF 1H filter — bias besar ditentukan dari 1H, entry tetap 15m
+  1H BULL → hanya cari LONG di 15m
+  1H BEAR → hanya cari SHORT di 15m
+  1H NEUTRAL → skip pair (tidak trade)
+  Sesuai PDF: HTF untuk arah, LTF untuk entry
 
 === CHANGELOG V6.4 ===
 - FIX KRITIS: Candle trigger (Hammer dll.) sekarang wajib disertai Stoch zona benar
@@ -67,6 +74,9 @@ SYMBOL = SYMBOLS[0]   # alias untuk backward-compat (tick size, candle ts)
 
 TF          = "15m"
 TF_MS       = 15 * 60_000
+HTF         = "1H"           # Higher timeframe untuk bias
+HTF_BARS    = 100            # candle 1H yang diambil
+HTF_MIN_BARS = 50            # minimum candle 1H valid
 MONITOR_TF  = "5m"
 MONITOR_MS  = 5  * 60_000
 HISTORY_BARS = 300
@@ -141,9 +151,9 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(message)s"
 )
-log = logging.getLogger("V6.4")
+log = logging.getLogger("V6.5")
 S = requests.Session()
-S.headers.update({"User-Agent": "ALPHAQUANT-V6.4"})
+S.headers.update({"User-Agent": "ALPHAQUANT-V6.5"})
 TELEGRAM = bool(TOKEN and CHAT_ID)
 
 # ================= HELPERS =================
@@ -500,6 +510,33 @@ def check_trend(cs, ema_fast, ema_slow, ema_mid, st_list, highs, lows):
     if bear_score >= 3 and bear_score > bull_score:
         return "BEAR", bear_score, " | ".join(notes)
     return None, max(bull_score, bear_score), " | ".join(notes)
+
+# ================= HTF BIAS (1H) =================
+
+def check_htf_bias(inst):
+    """
+    Ambil candle 1H dan tentukan bias besar (BULL/BEAR/None).
+    Logika sama dengan check_trend tapi di timeframe 1H.
+    Returns: bias ('BULL'|'BEAR'|None), score, detail
+    """
+    cs_htf = candles(inst, HTF, HTF_BARS)
+    if len(cs_htf) < HTF_MIN_BARS:
+        log.warning("%s: candle 1H kurang (%s) — HTF skip.", inst, len(cs_htf))
+        return None, 0, "data 1H kurang"
+
+    closes  = [c[4] for c in cs_htf]
+    atr_htf = calc_atr(cs_htf, ATR_PERIOD)
+    ef      = calc_ema(closes, EMA_FAST)
+    es      = calc_ema(closes, EMA_SLOW)
+    em      = calc_bollinger_mid(closes, EMA_MID)
+    st_atr  = calc_atr(cs_htf, ST_ATR_PERIOD)
+    st      = calc_supertrend(cs_htf, st_atr, ST_MULT)
+    highs, lows = calc_swings(cs_htf, SWING_LEN)
+
+    if ef[-1] is None or es[-1] is None:
+        return None, 0, "EMA 1H belum siap"
+
+    return check_trend(cs_htf, ef, es, em, st, highs, lows)
 
 # ================= STEP 2: AREA =================
 
@@ -954,9 +991,10 @@ def _rej(stage, detail):
     REJECT_LOG.append(f"{stage}: {detail}")
     return None
 
-def build_tapte_signal(cs, inst=SYMBOL, tick=0.1):
+def build_tapte_signal(cs, inst=SYMBOL, tick=0.1, htf_bias=None):
     """
     Jalankan urutan TAPTE pada candle 15m untuk pair `inst`.
+    htf_bias: bias dari 1H ('BULL'/'BEAR'/None) — jika diisi, 15m bias harus searah.
     Returns signal dict atau None.
     """
     REJECT_LOG.clear()
@@ -990,6 +1028,10 @@ def build_tapte_signal(cs, inst=SYMBOL, tick=0.1):
     bias, t_score, t_detail = check_trend(cs, ema_fast, ema_slow, ema_mid, st_list, highs, lows)
     if bias is None:
         return _rej("Tren", f"bias tidak jelas (score {t_score}/5) | {t_detail}")
+
+    # === HTF FILTER: 15m bias harus searah dengan 1H bias ===
+    if htf_bias is not None and bias != htf_bias:
+        return _rej("HTF", f"15m bias {bias} berlawanan dengan 1H bias {htf_bias} — skip")
 
     # === STEP 2: AREA ===
     supports, resistances = find_key_levels(
@@ -1031,8 +1073,10 @@ def build_tapte_signal(cs, inst=SYMBOL, tick=0.1):
     entry, sl, tp, rr, sl_atr, risk_pct = result
     direction = "LONG" if bias == "BULL" else "SHORT"
 
+    htf_str = f"HTF 1H: {htf_bias} ✅" if htf_bias is not None else "HTF 1H: —"
     note = (
-        f"Tren: {bias} ({t_score}/5) | {t_detail}\n"
+        f"{htf_str}\n"
+        f"Tren 15m: {bias} ({t_score}/5) | {t_detail}\n"
         f"Area: {lbl}\n"
         f"Pattern: {pattern or '-'} ({p_detail})\n"
         f"Trigger: {trigger_name}"
@@ -1057,6 +1101,7 @@ def build_tapte_signal(cs, inst=SYMBOL, tick=0.1):
         "atr"              : round(atr_val, 4),
         "sl_atr"           : round(sl_atr, 2),
         "risk_pct"         : round(risk_pct * 100, 2),
+        "htf_bias"         : htf_bias,
         "trend_bias"       : bias,
         "trend_score"      : t_score,
         "area_level"       : lbl,
@@ -1297,7 +1342,7 @@ def stats_report(h):
     note   = "\n\n<i>< 30 trade: belum signifikan.</i>" if len(ts) < 30 else ""
 
     tg(
-        "<b>📊 ALPHAQUANT V6.4 PERFORMA</b>\n"
+        "<b>📊 ALPHAQUANT V6.5 PERFORMA</b>\n"
         "━━━━━━━━━━━━━━━━━━\n"
         f"Trade        : {len(ts)}\n"
         f"Win          : {len(wins)}\n"
@@ -1319,7 +1364,7 @@ def signal_message(s):
     note_lines = _safe(s.get("note", "")).replace("\\n", "\n")
 
     return (
-        "<b>🚨 ALPHAQUANT V6.4 SIGNAL</b>\n"
+        "<b>🚨 ALPHAQUANT V6.5 SIGNAL</b>\n"
         "━━━━━━━━━━━━━━━━━━\n"
         f"<b>{s['symbol']}</b> · <b>{s['direction']}</b> · {s['timeframe']}\n\n"
         f"{note_lines}\n\n"
@@ -1330,6 +1375,7 @@ def signal_message(s):
         f"RR    : <b>1:{s['rr']:.2f}</b>\n"
         f"SL    : {s['sl_atr']:.2f} ATR · {s['risk_pct']:.2f}% harga\n"
         f"Fee ≈ {fee_r:.2f}R (taker {FEE_PER_SIDE*100:.2f}%/sisi)\n\n"
+        f"HTF 1H  : {s.get('htf_bias') or '—'}\n"
         f"EMA13/21: {s['ema_fast']} / {s['ema_slow']}\n"
         f"Stoch K : {s['stoch_k']}\n"
         f"Risiko  : {s['risk_usdt']:.2f} USDT (1% modal)\n"
@@ -1384,9 +1430,16 @@ def scan(h):
             continue
 
         tick = get_tick_size(sym)
-        log.info("TAPTE scan %s %s (tick=%s)...", sym, TF, tick)
 
-        sig = build_tapte_signal(cs, inst=sym, tick=tick)
+        # === HTF 1H: tentukan bias besar dulu ===
+        htf_bias, htf_score, htf_detail = check_htf_bias(sym)
+        if htf_bias is None:
+            log.info("%s: 1H bias neutral/tidak jelas (%s) — skip.", sym, htf_detail)
+            continue
+        log.info("TAPTE scan %s %s | HTF 1H: %s (%s/5) | LTF tick=%s",
+                 sym, TF, htf_bias, htf_score, tick)
+
+        sig = build_tapte_signal(cs, inst=sym, tick=tick, htf_bias=htf_bias)
 
         if sig is None:
             log.info("%s: tidak ada sinyal. %s", sym, " → ".join(REJECT_LOG))
@@ -1414,7 +1467,7 @@ def main():
     global TELEGRAM
 
     log.info("==========================================")
-    log.info("ALPHAQUANT V6.4 — MULTI-PAIR TAPTE 15m (%s pairs)", len(SYMBOLS))
+    log.info("ALPHAQUANT V6.5 — MULTI-PAIR TAPTE 15m (%s pairs)", len(SYMBOLS))
     log.info("==========================================")
 
     if not TOKEN or not CHAT_ID:
@@ -1443,7 +1496,7 @@ def main():
         h["last_online_day"] = today
         pairs_str = " · ".join(s.replace("-USDT-SWAP", "") for s in SYMBOLS)
         tg(
-            "<b>🟢 ALPHAQUANT V6.4 ONLINE</b>\n"
+            "<b>🟢 ALPHAQUANT V6.5 ONLINE</b>\n"
             "━━━━━━━━━━━━━━━━━━\n"
             f"Pairs    : {pairs_str}\n"
             f"TF       : 15m · Maks {MAX_OPEN} posisi bersamaan\n"
@@ -1495,6 +1548,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
