@@ -43,8 +43,21 @@ def env_first(*names: str) -> str:
 TOKEN   = env_first("TELEGRAM_TOKEN", "TELEGRAM_BOT_TOKEN", "BOT_TOKEN")
 CHAT_ID = env_first("CHAT_ID", "TELEGRAM_CHAT_ID", "TELEGRAM_CHAT")
 
-# --- Instrument ---
-SYMBOL      = "BTC-USDT-SWAP"
+# --- Instruments ---
+# Pair utama + top liquid OKX SWAP — diurutkan dari likuiditas tertinggi
+SYMBOLS = [
+    "BTC-USDT-SWAP",
+    "ETH-USDT-SWAP",
+    "SOL-USDT-SWAP",
+    "XRP-USDT-SWAP",
+    "BNB-USDT-SWAP",
+    "DOGE-USDT-SWAP",
+    "ADA-USDT-SWAP",
+    "AVAX-USDT-SWAP",
+    "LINK-USDT-SWAP",
+    "DOT-USDT-SWAP",
+]
+SYMBOL = SYMBOLS[0]   # alias untuk backward-compat (tick size, candle ts)
 
 TF          = "15m"
 TF_MS       = 15 * 60_000
@@ -90,7 +103,7 @@ def _env_float(key, default):
         return default
 
 TARGET_RR        = _env_float("TARGET_RR", 2.0)
-MAX_OPEN         = 1   # BTC-only: cukup 1 posisi aktif
+MAX_OPEN         = 10  # maks posisi bersamaan (1 per pair, maks 10 pair)
 COOLDOWN_HOURS_PER_SYMBOL = _env_float("COOLDOWN_HOURS", 4.0)
 RISK_PER_TRADE   = _env_float("RISK_PER_TRADE", 0.01)   # 1% per posisi
 ACCOUNT_EQUITY   = _env_float("ACCOUNT_EQUITY", 1000.0)
@@ -260,12 +273,18 @@ def current_price(inst=SYMBOL):
     except:
         return None
 
+_tick_cache: dict = {}
+
 def get_tick_size(inst=SYMBOL):
+    if inst in _tick_cache:
+        return _tick_cache[inst]
     d = api("/api/v5/public/instruments", {"instType": "SWAP", "instId": inst})
     try:
-        return float(d["data"][0]["tickSz"])
+        tick = float(d["data"][0]["tickSz"])
     except:
-        return 0.1   # BTC default
+        tick = 0.1
+    _tick_cache[inst] = tick
+    return tick
 
 def tick_round(x, tick):
     """Bulatkan x ke kelipatan tick. Aman untuk harga sangat kecil."""
@@ -1304,49 +1323,72 @@ def signal_message(s):
 # ================= SCAN =================
 
 def scan(h):
-    """Scan BTC-USDT-SWAP 15m dengan strategi TAPTE. Returns jumlah sinyal baru."""
+    """
+    Scan semua SYMBOLS 15m dengan strategi TAPTE.
+    - Maks 1 posisi aktif per pair
+    - Maks MAX_OPEN posisi bersamaan (total semua pair)
+    Returns jumlah sinyal baru.
+    """
+    # Cek candle BTC sebagai referensi waktu
     ref = latest_candle_ts()
     if ref is not None and h.get("last_candle") == ref:
         log.info("Candle %s belum baru — scan dilewati.", iso(ref))
         return 0
 
     if len(h["open"]) >= MAX_OPEN:
-        log.info("Posisi BTC sudah aktif — scan dilewati.")
+        log.info("Total posisi sudah %s/%s — scan dilewati.", len(h["open"]), MAX_OPEN)
         if ref is not None:
             h["last_candle"] = ref
         return 0
 
-    # Ambil candle BTC
-    cs = candles(SYMBOL, TF, HISTORY_BARS)
-    if len(cs) < MIN_BARS:
-        log.warning("Data kurang: %s candle.", len(cs))
-        return 0
+    # Pair yang sudah punya posisi aktif — skip
+    open_symbols = {t["symbol"] for t in h["open"]}
 
-    if ref is not None and cs[-1][0] != ref:
-        log.info("Candle terakhir tidak sinkron.")
-        return 0
+    new_signals = 0
+    for sym in SYMBOLS:
+        # Stop kalau sudah penuh
+        if len(h["open"]) >= MAX_OPEN:
+            break
 
-    tick = get_tick_size(SYMBOL)
-    log.info("TAPTE scan %s %s (tick=%s)...", SYMBOL, TF, tick)
+        # Skip kalau pair ini sudah ada posisi aktif
+        if sym in open_symbols:
+            log.info("%s sudah ada posisi aktif — dilewati.", sym)
+            continue
 
-    sig = build_tapte_signal(cs, inst=SYMBOL, tick=tick)
+        cs = candles(sym, TF, HISTORY_BARS)
+        if len(cs) < MIN_BARS:
+            log.warning("%s: data kurang (%s candle).", sym, len(cs))
+            continue
+
+        # Sinkronisasi waktu candle (BTC ref)
+        if ref is not None and cs[-1][0] != ref:
+            log.info("%s: candle tidak sinkron dengan BTC ref.", sym)
+            continue
+
+        tick = get_tick_size(sym)
+        log.info("TAPTE scan %s %s (tick=%s)...", sym, TF, tick)
+
+        sig = build_tapte_signal(cs, inst=sym, tick=tick)
+
+        if sig is None:
+            log.info("%s: tidak ada sinyal. %s", sym, " → ".join(REJECT_LOG))
+            continue
+
+        if is_blocked(h, sig):
+            log.info("%s: sinyal diblokir (duplikat/cooldown).", sym)
+            continue
+
+        h["open"].append(sig)
+        open_symbols.add(sym)
+        new_signals += 1
+        save_history(h)
+        log.info("SINYAL BARU %s %s RR=1:%.2f", sig["symbol"], sig["direction"], sig["rr"])
+        tg(signal_message(sig))
 
     if ref is not None:
         h["last_candle"] = ref
 
-    if sig is None:
-        log.info("Tidak ada sinyal. %s", " → ".join(REJECT_LOG))
-        return 0
-
-    if is_blocked(h, sig):
-        log.info("Sinyal diblokir (duplikat/cooldown/posisi open).")
-        return 0
-
-    h["open"].append(sig)
-    save_history(h)
-    log.info("SINYAL BARU %s %s RR=1:%.2f", sig["symbol"], sig["direction"], sig["rr"])
-    tg(signal_message(sig))
-    return 1
+    return new_signals
 
 # ================= MAIN =================
 
@@ -1354,7 +1396,7 @@ def main():
     global TELEGRAM
 
     log.info("==========================================")
-    log.info("ALPHAQUANT V6.3 — BTC TAPTE 15m")
+    log.info("ALPHAQUANT V6.3 — MULTI-PAIR TAPTE 15m (%s pairs)", len(SYMBOLS))
     log.info("==========================================")
 
     if not TOKEN or not CHAT_ID:
@@ -1381,13 +1423,15 @@ def main():
     today = datetime.now(timezone.utc).date().isoformat()
     if TELEGRAM and h.get("last_online_day") != today:
         h["last_online_day"] = today
+        pairs_str = " · ".join(s.replace("-USDT-SWAP", "") for s in SYMBOLS)
         tg(
             "<b>🟢 ALPHAQUANT V6.3 ONLINE</b>\n"
             "━━━━━━━━━━━━━━━━━━\n"
-            f"Pair     : BTC-USDT-SWAP · 15m\n"
+            f"Pairs    : {pairs_str}\n"
+            f"TF       : 15m · Maks {MAX_OPEN} posisi bersamaan\n"
             f"Strategi : T-A-P-T-E (Akademi Crypto)\n"
-            f"Indikator: EMA13/21, Supertrend, BB MA20, Stochastic 5-3-3\n"
-            f"Area     : Swing S/R + EMA dinamis + Fib + S/R Flip + Liq Grab\n"
+            f"Indikator: EMA13/21, Supertrend, BB MA20, Stoch 5-3-3\n"
+            f"Area     : Swing S/R + EMA + Fib + S/R Flip + Liq Grab\n"
             f"Filter   : Volume, Bear Pattern Block, Stoch Zona Ketat\n"
             f"RR min   : 1:{MIN_RR:.1f} | Risiko maks 1% per trade\n"
             "Signal-only · 24 jam non-stop"
