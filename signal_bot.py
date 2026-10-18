@@ -1,10 +1,16 @@
 """
-ALPHAQUANT V6.3
+ALPHAQUANT V6.4
 Strategi: T-A-P-T-E (Trend → Area → Pattern → Trigger → Exit)
 Berdasarkan: Checklist Trading Crypto 1H (Akademi Crypto - Crypto Trading Guide hlm. 138-139)
-Pair   : BTC-USDT-SWAP (eksklusif)
+Pair   : 10 liquid pairs (BTC/ETH/SOL/XRP/BNB/DOGE/ADA/AVAX/LINK/DOT)
 TF     : 15m
 Mode   : Signal-only → Telegram
+
+=== CHANGELOG V6.4 ===
+- FIX KRITIS: Candle trigger (Hammer dll.) sekarang wajib disertai Stoch zona benar
+  BULL: K harus ≤ 50 (mencegah sinyal saat stoch OB, contoh K=86)
+  BEAR: K harus ≥ 50 (mencegah sinyal saat stoch OS)
+  Sebelumnya: OR logic — hammer saja cukup tanpa cek zona stoch
 
 === URUTAN WAJIB ===
 1. TREND   : Market structure (HH/HL atau LH/LL) + EMA13/21 + Supertrend + Bollinger MA20
@@ -848,6 +854,18 @@ def check_trigger(cs, bias, stoch_k, stoch_d, atr_val):
         candle_triggers = []   # volume tidak memadai
         stoch_note = (stoch_note or "") + " [vol rendah, candle trigger diabaikan]"
 
+    # Zona stochastic wajib untuk candle trigger:
+    # BULL: K harus ≤ 50 (sisi bawah / netral-bawah), bukan OB
+    # BEAR: K harus ≥ 50 (sisi atas / netral-atas), bukan OS
+    # Ini mencegah sinyal hammer saat stoch sudah OB (K=86 → blok BULL)
+    if candle_triggers and sk is not None:
+        if bias == "BULL" and sk > 50:
+            candle_triggers = []
+            stoch_note = (stoch_note or "") + f" [Stoch K={sk:.1f} terlalu tinggi, candle trigger diblok]"
+        elif bias == "BEAR" and sk < 50:
+            candle_triggers = []
+            stoch_note = (stoch_note or "") + f" [Stoch K={sk:.1f} terlalu rendah, candle trigger diblok]"
+
     triggered    = bool(candle_triggers) or stoch_trigger
     trigger_name = " + ".join(candle_triggers)
     if stoch_trigger:
@@ -1476,6 +1494,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
