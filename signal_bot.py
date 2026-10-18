@@ -26,7 +26,7 @@ Mode   : Signal-only → Telegram
 
 === MONEY MANAGEMENT ===
 - Risiko maks 1% modal per posisi
-- Maks 1 posisi BTC-only
+- Maks 10 posisi bersamaan (1 per pair)
 """
 
 from __future__ import annotations
@@ -141,9 +141,9 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(message)s"
 )
-log = logging.getLogger("V6.3")
+log = logging.getLogger("V6.4")
 S = requests.Session()
-S.headers.update({"User-Agent": "ALPHAQUANT-V6.3"})
+S.headers.update({"User-Agent": "ALPHAQUANT-V6.4"})
 TELEGRAM = bool(TOKEN and CHAT_ID)
 
 # ================= HELPERS =================
@@ -1297,7 +1297,7 @@ def stats_report(h):
     note   = "\n\n<i>< 30 trade: belum signifikan.</i>" if len(ts) < 30 else ""
 
     tg(
-        "<b>📊 ALPHAQUANT V6.3 PERFORMA</b>\n"
+        "<b>📊 ALPHAQUANT V6.4 PERFORMA</b>\n"
         "━━━━━━━━━━━━━━━━━━\n"
         f"Trade        : {len(ts)}\n"
         f"Win          : {len(wins)}\n"
@@ -1319,7 +1319,7 @@ def signal_message(s):
     note_lines = _safe(s.get("note", "")).replace("\\n", "\n")
 
     return (
-        "<b>🚨 ALPHAQUANT V6.3 SIGNAL</b>\n"
+        "<b>🚨 ALPHAQUANT V6.4 SIGNAL</b>\n"
         "━━━━━━━━━━━━━━━━━━\n"
         f"<b>{s['symbol']}</b> · <b>{s['direction']}</b> · {s['timeframe']}\n\n"
         f"{note_lines}\n\n"
@@ -1414,7 +1414,7 @@ def main():
     global TELEGRAM
 
     log.info("==========================================")
-    log.info("ALPHAQUANT V6.3 — MULTI-PAIR TAPTE 15m (%s pairs)", len(SYMBOLS))
+    log.info("ALPHAQUANT V6.4 — MULTI-PAIR TAPTE 15m (%s pairs)", len(SYMBOLS))
     log.info("==========================================")
 
     if not TOKEN or not CHAT_ID:
@@ -1443,7 +1443,7 @@ def main():
         h["last_online_day"] = today
         pairs_str = " · ".join(s.replace("-USDT-SWAP", "") for s in SYMBOLS)
         tg(
-            "<b>🟢 ALPHAQUANT V6.3 ONLINE</b>\n"
+            "<b>🟢 ALPHAQUANT V6.4 ONLINE</b>\n"
             "━━━━━━━━━━━━━━━━━━\n"
             f"Pairs    : {pairs_str}\n"
             f"TF       : 15m · Maks {MAX_OPEN} posisi bersamaan\n"
@@ -1494,6 +1494,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
