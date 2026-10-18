@@ -1468,6 +1468,7 @@ def main():
                 h["last_report_ts"] = time.time()
             elif closed_n:
                 stats_report(h)
+                h["last_report_ts"] = time.time()
 
             scan(h)
             save_history(h)
@@ -1494,6 +1495,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
