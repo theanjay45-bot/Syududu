@@ -297,18 +297,26 @@ def get_tick_size(inst=SYMBOL):
     d = api("/api/v5/public/instruments", {"instType": "SWAP", "instId": inst})
     try:
         tick = float(d["data"][0]["tickSz"])
+        if tick <= 0:
+            raise ValueError("tickSz <= 0")
     except:
-        tick = 0.1
+        tick = 0.0  # akan di-derive dari harga pasar di tick_round
     _tick_cache[inst] = tick
     return tick
 
 def tick_round(x, tick):
     """Bulatkan x ke kelipatan tick. Aman untuk harga sangat kecil."""
-    if tick <= 0 or x == 0:
+    if x == 0:
         return x
-    # Hitung presisi desimal dari tick agar round() tidak memotong angka penting
-    decimals = max(0, -int(math.floor(math.log10(tick))))
-    return round(round(x / tick) * tick, decimals + 2)
+    if tick <= 0:
+        # Fallback: derive tick dari magnitude harga (4 significant figures)
+        mag = math.floor(math.log10(abs(x)))
+        tick = 10 ** (mag - 3)
+    # Pastikan hasil tidak nol akibat pembulatan tick yang terlalu besar
+    result = round(round(x / tick) * tick, max(0, -int(math.floor(math.log10(tick)))) + 2)
+    if result == 0 and x != 0:
+        return x  # jangan kembalikan 0 kalau input bukan 0
+    return result
 
 # ================= INDICATORS =================
 
@@ -1268,6 +1276,11 @@ def check_open(h):
     for t in closed:
         _send_close_message(t)
 
+    if closed:
+        # Kirim stats segera setelah ada trade yang close — tidak tunggu periodic
+        stats_report(h)
+        h["last_report_ts"] = time.time()
+
     return len(closed)
 
 # ================= REPORT =================
@@ -1512,14 +1525,11 @@ def main():
         started = time.time()
         try:
             log.info("Mulai siklus...")
-            closed_n = check_open(h)
+            check_open(h)  # stats_report dipanggil di dalam jika ada yang close
 
             due = (time.time() - float(h.get("last_report_ts", 0))) >= REPORT_EVERY_HOURS * 3600
             if due:
                 running_report(h)
-                stats_report(h)
-                h["last_report_ts"] = time.time()
-            elif closed_n:
                 stats_report(h)
                 h["last_report_ts"] = time.time()
 
@@ -1548,6 +1558,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
