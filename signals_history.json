@@ -32,6 +32,39 @@
       "exit_time": null,
       "result_r": null,
       "result": null
+    },
+    {
+      "signal_id": "DOT-USDT-SWAP|LONG|1792382400000|TAPTE",
+      "symbol": "DOT-USDT-SWAP",
+      "direction": "LONG",
+      "timeframe": "15m",
+      "setup": "TAPTE",
+      "note": "HTF 1H: BULL ✅\nTren 15m: BULL (3/5) | Struktur HH+HL ✓ | EMA tidak selaras | Supertrend hijau ✓ | Harga < BB MA20 ✓\nArea: SwingLow@1.1\nPattern: double_bottom (Double bottom ~1.1)\nTrigger: Stoch cross atas zona OS (K=5.2)",
+      "signal_candle_time": 1792382400000,
+      "signal_candle_iso": "2026-10-19T04:00:00+00:00",
+      "created_at": "2026-10-19T04:27:10.532738+00:00",
+      "entry": 1.117,
+      "sl": 1.1041,
+      "tp": 1.1427,
+      "rr": 2.0,
+      "atr": 0.0069,
+      "sl_atr": 1.87,
+      "risk_pct": 1.15,
+      "htf_bias": "BULL",
+      "trend_bias": "BULL",
+      "trend_score": 3,
+      "area_level": "SwingLow@1.1",
+      "pattern": "double_bottom",
+      "trigger": "Stoch cross atas zona OS (K=5.2)",
+      "stoch_k": 5.2,
+      "ema_fast": 1.12,
+      "ema_slow": 1.12,
+      "risk_usdt": 10.0,
+      "status": "OPEN",
+      "exit_price": null,
+      "exit_time": null,
+      "result_r": null,
+      "result": null
     }
   ],
   "closed": [
@@ -775,5 +808,5 @@
   ],
   "last_online_day": "2026-10-19",
   "last_report_ts": 1792375270.6291132,
-  "last_candle": 1792380600000
+  "last_candle": 1792382400000
 }
