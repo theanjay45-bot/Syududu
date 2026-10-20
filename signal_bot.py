@@ -1278,7 +1278,11 @@ def check_open(h):
 
     if closed:
         # Kirim stats segera setelah ada trade yang close — tidak tunggu periodic
-        stats_report(h)
+        try:
+            stats_report(h)
+        except Exception as e:
+            log.error("stats_report gagal: %s", e)
+            tg(f"⚠️ stats_report error: {e}")
         h["last_report_ts"] = time.time()
 
     return len(closed)
@@ -1352,7 +1356,7 @@ def stats_report(h):
     avg_rr = sum(float(x.get("rr", TARGET_RR)) for x in ts) / len(ts)
     bep    = 100 / (1 + avg_rr)
     bep_net= 100 * (1 + fees / len(ts)) / (1 + avg_rr)
-    note   = "\n\n<i>< 30 trade: belum signifikan.</i>" if len(ts) < 30 else ""
+    note   = "\n\n<i>&lt; 30 trade: belum signifikan.</i>" if len(ts) < 30 else ""
 
     tg(
         "<b>📊 ALPHAQUANT V6.5 PERFORMA</b>\n"
@@ -1558,6 +1562,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
