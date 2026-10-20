@@ -32,7 +32,9 @@
       "exit_time": null,
       "result_r": null,
       "result": null
-    },
+    }
+  ],
+  "closed": [
     {
       "signal_id": "DOT-USDT-SWAP|LONG|1792456200000|TAPTE",
       "symbol": "DOT-USDT-SWAP",
@@ -60,15 +62,14 @@
       "ema_fast": 1.15,
       "ema_slow": 1.14,
       "risk_usdt": 10.0,
-      "status": "OPEN",
-      "exit_price": null,
-      "exit_time": null,
-      "result_r": null,
-      "result": null
+      "status": "CLOSED",
+      "exit_price": 1.1261,
+      "exit_time": "2026-10-20T01:10:00+00:00",
+      "result_r": -1.0,
+      "result": "LOSS"
     }
   ],
-  "closed": [],
   "last_online_day": "2026-10-20",
-  "last_report_ts": 1792449674.2364316,
-  "last_candle": 1792456200000
+  "last_report_ts": 1792459838.8695974,
+  "last_candle": 1792458900000
 }
