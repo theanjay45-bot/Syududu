@@ -1,10 +1,17 @@
 """
-ALPHAQUANT V6.5
+ALPHAQUANT V6.6
 Strategi: T-A-P-T-E (Trend → Area → Pattern → Trigger → Exit)
 Berdasarkan: Checklist Trading Crypto 1H (Akademi Crypto - Crypto Trading Guide hlm. 138-139)
-Pair   : 10 liquid pairs (BTC/ETH/SOL/XRP/BNB/DOGE/ADA/AVAX/LINK/DOT)
+Pair   : 10 crypto + 4 TradFi commodities (Gold/Silver/WTI/Brent)
 TF     : 15m (entry) + 1H (bias HTF)
 Mode   : Signal-only → Telegram
+
+=== CHANGELOG V6.6 ===
+- BARU: Tambah 4 TradFi Commodities OKX Perp
+  XAU-USDT-SWAP (Gold), XAG-USDT-SWAP (Silver)
+  CL-USDT-SWAP (WTI Crude Oil), BZ-USDT-SWAP (Brent Oil)
+  Korelasi rendah dengan crypto → diversifikasi correlation risk
+  API sama persis, tidak perlu perubahan lain
 
 === CHANGELOG V6.5 ===
 - BARU: HTF 1H filter — bias besar ditentukan dari 1H, entry tetap 15m
@@ -58,6 +65,7 @@ CHAT_ID = env_first("CHAT_ID", "TELEGRAM_CHAT_ID", "TELEGRAM_CHAT")
 
 # --- Instruments ---
 # Pair utama + top liquid OKX SWAP — diurutkan dari likuiditas tertinggi
+# TradFi Commodities (OKX Perp): korelasi rendah dengan crypto → diversifikasi
 SYMBOLS = [
     "BTC-USDT-SWAP",
     "ETH-USDT-SWAP",
@@ -69,6 +77,11 @@ SYMBOLS = [
     "AVAX-USDT-SWAP",
     "LINK-USDT-SWAP",
     "DOT-USDT-SWAP",
+    # TradFi Commodities
+    "XAU-USDT-SWAP",   # Gold     ~2.23B vol
+    "XAG-USDT-SWAP",   # Silver   ~612M vol
+    "CL-USDT-SWAP",    # WTI Crude Oil ~1.28B vol
+    "BZ-USDT-SWAP",    # Brent Oil ~560M vol
 ]
 SYMBOL = SYMBOLS[0]   # alias untuk backward-compat (tick size, candle ts)
 
@@ -151,9 +164,9 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(message)s"
 )
-log = logging.getLogger("V6.5")
+log = logging.getLogger("V6.6")
 S = requests.Session()
-S.headers.update({"User-Agent": "ALPHAQUANT-V6.5"})
+S.headers.update({"User-Agent": "ALPHAQUANT-V6.6"})
 TELEGRAM = bool(TOKEN and CHAT_ID)
 
 # ================= HELPERS =================
@@ -1359,7 +1372,7 @@ def stats_report(h):
     note   = "\n\n<i>&lt; 30 trade: belum signifikan.</i>" if len(ts) < 30 else ""
 
     tg(
-        "<b>📊 ALPHAQUANT V6.5 PERFORMA</b>\n"
+        "<b>📊 ALPHAQUANT V6.6 PERFORMA</b>\n"
         "━━━━━━━━━━━━━━━━━━\n"
         f"Trade        : {len(ts)}\n"
         f"Win          : {len(wins)}\n"
@@ -1381,7 +1394,7 @@ def signal_message(s):
     note_lines = _safe(s.get("note", "")).replace("\\n", "\n")
 
     return (
-        "<b>🚨 ALPHAQUANT V6.5 SIGNAL</b>\n"
+        "<b>🚨 ALPHAQUANT V6.6 SIGNAL</b>\n"
         "━━━━━━━━━━━━━━━━━━\n"
         f"<b>{s['symbol']}</b> · <b>{s['direction']}</b> · {s['timeframe']}\n\n"
         f"{note_lines}\n\n"
@@ -1484,7 +1497,7 @@ def main():
     global TELEGRAM
 
     log.info("==========================================")
-    log.info("ALPHAQUANT V6.5 — MULTI-PAIR TAPTE 15m (%s pairs)", len(SYMBOLS))
+    log.info("ALPHAQUANT V6.6 — MULTI-PAIR TAPTE 15m (%s pairs)", len(SYMBOLS))
     log.info("==========================================")
 
     if not TOKEN or not CHAT_ID:
@@ -1513,7 +1526,7 @@ def main():
         h["last_online_day"] = today
         pairs_str = " · ".join(s.replace("-USDT-SWAP", "") for s in SYMBOLS)
         tg(
-            "<b>🟢 ALPHAQUANT V6.5 ONLINE</b>\n"
+            "<b>🟢 ALPHAQUANT V6.6 ONLINE</b>\n"
             "━━━━━━━━━━━━━━━━━━\n"
             f"Pairs    : {pairs_str}\n"
             f"TF       : 15m · Maks {MAX_OPEN} posisi bersamaan\n"
@@ -1562,6 +1575,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
