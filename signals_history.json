@@ -65,6 +65,39 @@
       "exit_time": null,
       "result_r": null,
       "result": null
+    },
+    {
+      "signal_id": "XAU-USDT-SWAP|SHORT|1792634400000|TAPTE",
+      "symbol": "XAU-USDT-SWAP",
+      "direction": "SHORT",
+      "timeframe": "15m",
+      "setup": "TAPTE",
+      "note": "HTF 1H: BEAR ✅\nTren 15m: BEAR (3/5) | Struktur HH+HL ✓ | Harga < EMA13 < EMA21 ✓ | Supertrend merah ✓ | Harga < BB MA20 ✓\nArea: EMA13@4126.3\nPattern: bear_flag (Bear flag breakdown 4119.2)\nTrigger: Bearish Engulfing + Tweezer Top",
+      "signal_candle_time": 1792634400000,
+      "signal_candle_iso": "2026-10-22T02:00:00+00:00",
+      "created_at": "2026-10-22T02:23:58.240987+00:00",
+      "entry": 4119.2,
+      "sl": 4149.4,
+      "tp": 4058.8,
+      "rr": 2.0,
+      "atr": 4.9569,
+      "sl_atr": 6.09,
+      "risk_pct": 0.73,
+      "htf_bias": "BEAR",
+      "trend_bias": "BEAR",
+      "trend_score": 3,
+      "area_level": "EMA13@4126.3",
+      "pattern": "bear_flag",
+      "trigger": "Bearish Engulfing + Tweezer Top",
+      "stoch_k": 50.2,
+      "ema_fast": 4126.34,
+      "ema_slow": 4129.48,
+      "risk_usdt": 10.0,
+      "status": "OPEN",
+      "exit_price": null,
+      "exit_time": null,
+      "result_r": null,
+      "result": null
     }
   ],
   "closed": [
@@ -401,5 +434,5 @@
   ],
   "last_online_day": "2026-10-22",
   "last_report_ts": 1792633564.658071,
-  "last_candle": 1792632600000
+  "last_candle": 1792634400000
 }
