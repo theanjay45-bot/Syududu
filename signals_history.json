@@ -209,6 +209,41 @@
       "exit_time": null,
       "result_r": null,
       "result": null
+    },
+    {
+      "signal_id": "XRP-USDT-SWAP|SHORT|1792713600000|TAPTE",
+      "symbol": "XRP-USDT-SWAP",
+      "direction": "SHORT",
+      "timeframe": "15m",
+      "setup": "TAPTE",
+      "note": "HTF 1H: BEAR ✅\nADX: 23.5 | ATR rel: 0.78x\nTren 15m: BEAR (3/5) | Struktur LH+LL ✓ | EMA tidak selaras | Supertrend merah ✓ | Harga > BB MA20 ✓\nArea: SwingHigh@1.3\nPattern: double_top (Double top ~1.3)\nTrigger: Tweezer Top",
+      "signal_candle_time": 1792713600000,
+      "signal_candle_iso": "2026-10-23T00:00:00+00:00",
+      "created_at": "2026-10-23T00:27:35.256160+00:00",
+      "entry": 1.3078,
+      "sl": 1.3148,
+      "tp": 1.2937,
+      "rr": 2.0,
+      "atr": 0.0041,
+      "sl_atr": 1.71,
+      "risk_pct": 0.54,
+      "htf_bias": "BEAR",
+      "trend_bias": "BEAR",
+      "trend_score": 3,
+      "area_level": "SwingHigh@1.3",
+      "pattern": "double_top",
+      "trigger": "Tweezer Top",
+      "stoch_k": 67.5,
+      "adx": 23.5,
+      "atr_rel": 0.78,
+      "ema_fast": 1.31,
+      "ema_slow": 1.31,
+      "risk_usdt": 10.0,
+      "status": "OPEN",
+      "exit_price": null,
+      "exit_time": null,
+      "result_r": null,
+      "result": null
     }
   ],
   "closed": [
@@ -817,7 +852,7 @@
       "result": "WIN"
     }
   ],
-  "last_online_day": "2026-10-22",
+  "last_online_day": "2026-10-23",
   "last_report_ts": 1792703696.753525,
-  "last_candle": 1792711800000
+  "last_candle": 1792713600000
 }
