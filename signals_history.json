@@ -69,6 +69,41 @@
       "exit_time": null,
       "result_r": null,
       "result": null
+    },
+    {
+      "signal_id": "LINK-USDT-SWAP|SHORT|1792914300000|TAPTE",
+      "symbol": "LINK-USDT-SWAP",
+      "direction": "SHORT",
+      "timeframe": "15m",
+      "setup": "TAPTE",
+      "note": "HTF 1H: BEAR ✅\nADX: 35.9 | ATR rel: 1.16x\nTren 15m: BEAR (5/5) | Struktur LH+LL ✓ | Harga < EMA13 < EMA21 ✓ | Supertrend merah ✓ | Harga < BB MA20 ✓\nArea: Fib50-618@11.4\nPattern: double_top (Double top ~11.6)\nTrigger: Tweezer Top",
+      "signal_candle_time": 1792914300000,
+      "signal_candle_iso": "2026-10-25T07:45:00+00:00",
+      "created_at": "2026-10-25T08:07:39.150154+00:00",
+      "entry": 11.4,
+      "sl": 11.605,
+      "tp": 10.989,
+      "rr": 2.0,
+      "atr": 0.0348,
+      "sl_atr": 5.9,
+      "risk_pct": 1.8,
+      "htf_bias": "BEAR",
+      "trend_bias": "BEAR",
+      "trend_score": 5,
+      "area_level": "Fib50-618@11.4",
+      "pattern": "double_top",
+      "trigger": "Tweezer Top",
+      "stoch_k": 66.7,
+      "adx": 35.9,
+      "atr_rel": 1.16,
+      "ema_fast": 11.44,
+      "ema_slow": 11.47,
+      "risk_usdt": 10.0,
+      "status": "OPEN",
+      "exit_price": null,
+      "exit_time": null,
+      "result_r": null,
+      "result": null
     }
   ],
   "closed": [
@@ -1134,5 +1169,5 @@
   ],
   "last_online_day": "2026-10-25",
   "last_report_ts": 1792906842.8384914,
-  "last_candle": 1792912500000
+  "last_candle": 1792914300000
 }
