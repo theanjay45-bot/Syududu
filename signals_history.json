@@ -1,5 +1,41 @@
 {
-  "open": [],
+  "open": [
+    {
+      "signal_id": "XRP-USDT-SWAP|SHORT|1793265300000|TAPTE",
+      "symbol": "XRP-USDT-SWAP",
+      "direction": "SHORT",
+      "timeframe": "15m",
+      "setup": "TAPTE",
+      "note": "HTF 1H: BEAR ✅\nADX: 28.4 | ATR rel: 0.91x\nTren 15m: BEAR (3/5) | Struktur campuran | Harga < EMA13 < EMA21 ✓ | Supertrend merah ✓ | Harga < BB MA20 ✓\nArea: Fib50-618@1.3\nPattern: double_top (Double top ~1.3)\nTrigger: Shooting Star",
+      "signal_candle_time": 1793265300000,
+      "signal_candle_iso": "2026-10-29T09:15:00+00:00",
+      "created_at": "2026-10-29T09:33:10.019333+00:00",
+      "entry": 1.292,
+      "sl": 1.3053,
+      "tp": 1.2655,
+      "rr": 2.0,
+      "atr": 0.0042,
+      "sl_atr": 3.15,
+      "risk_pct": 1.03,
+      "htf_bias": "BEAR",
+      "trend_bias": "BEAR",
+      "trend_score": 3,
+      "area_level": "Fib50-618@1.3",
+      "pattern": "double_top",
+      "trigger": "Shooting Star",
+      "stoch_k": 59.3,
+      "adx": 28.4,
+      "atr_rel": 0.91,
+      "ema_fast": 1.29,
+      "ema_slow": 1.29,
+      "risk_usdt": 10.0,
+      "status": "OPEN",
+      "exit_price": null,
+      "exit_time": null,
+      "result_r": null,
+      "result": null
+    }
+  ],
   "closed": [
     {
       "signal_id": "DOT-USDT-SWAP|LONG|1792456200000|TAPTE",
@@ -1587,6 +1623,6 @@
     }
   ],
   "last_online_day": "2026-10-29",
-  "last_report_ts": 1793250865.9995098,
-  "last_candle": 1793261700000
+  "last_report_ts": 1793266382.9269845,
+  "last_candle": 1793265300000
 }
