@@ -1,5 +1,41 @@
 {
-  "open": [],
+  "open": [
+    {
+      "signal_id": "DOGE-USDT-SWAP|SHORT|1793311200000|TAPTE",
+      "symbol": "DOGE-USDT-SWAP",
+      "direction": "SHORT",
+      "timeframe": "15m",
+      "setup": "TAPTE",
+      "note": "HTF 1H: BEAR ✅\nADX: 38.9 | ATR rel: 1.43x\nTren 15m: BEAR (5/5) | Struktur LH+LL ✓ | Harga < EMA13 < EMA21 ✓ | Supertrend merah ✓ | Harga < BB MA20 ✓\nArea: Fib50-618@0.1\nPattern: double_top (Double top ~0.1)\nTrigger: Tweezer Top + Shooting Star",
+      "signal_candle_time": 1793311200000,
+      "signal_candle_iso": "2026-10-29T22:00:00+00:00",
+      "created_at": "2026-10-29T22:19:15.905563+00:00",
+      "entry": 0.07604,
+      "sl": 0.08044,
+      "tp": 0.06724,
+      "rr": 2.0,
+      "atr": 0.0008,
+      "sl_atr": 5.52,
+      "risk_pct": 5.79,
+      "htf_bias": "BEAR",
+      "trend_bias": "BEAR",
+      "trend_score": 5,
+      "area_level": "Fib50-618@0.1",
+      "pattern": "double_top",
+      "trigger": "Tweezer Top + Shooting Star",
+      "stoch_k": 56.4,
+      "adx": 38.9,
+      "atr_rel": 1.43,
+      "ema_fast": 0.08,
+      "ema_slow": 0.08,
+      "risk_usdt": 10.0,
+      "status": "OPEN",
+      "exit_price": null,
+      "exit_time": null,
+      "result_r": null,
+      "result": null
+    }
+  ],
   "closed": [
     {
       "signal_id": "DOT-USDT-SWAP|LONG|1792456200000|TAPTE",
@@ -1693,5 +1729,5 @@
   ],
   "last_online_day": "2026-10-29",
   "last_report_ts": 1793304596.638095,
-  "last_candle": 1793308500000
+  "last_candle": 1793311200000
 }
