@@ -104,6 +104,41 @@
       "exit_time": null,
       "result_r": null,
       "result": null
+    },
+    {
+      "signal_id": "ETH-USDT-SWAP|SHORT|1793373300000|TAPTE",
+      "symbol": "ETH-USDT-SWAP",
+      "direction": "SHORT",
+      "timeframe": "15m",
+      "setup": "TAPTE",
+      "note": "HTF 1H: BEAR ✅\nADX: 23.2 | ATR rel: 1.21x\nTren 15m: BEAR (3/5) | Struktur LH+LL ✓ | Harga > EMA13 > EMA21 ✓ | Supertrend merah ✓ | Harga > BB MA20 ✓\nArea: SwingHigh@2253.0\nPattern: double_top (Double top ~2261.6)\nTrigger: Stoch cross bawah zona OB (K=77.8)",
+      "signal_candle_time": 1793373300000,
+      "signal_candle_iso": "2026-10-30T15:15:00+00:00",
+      "created_at": "2026-10-30T15:30:26.252554+00:00",
+      "entry": 2237.84,
+      "sl": 2256.7,
+      "tp": 2200.12,
+      "rr": 2.0,
+      "atr": 13.4078,
+      "sl_atr": 1.41,
+      "risk_pct": 0.84,
+      "htf_bias": "BEAR",
+      "trend_bias": "BEAR",
+      "trend_score": 3,
+      "area_level": "SwingHigh@2253.0",
+      "pattern": "double_top",
+      "trigger": "Stoch cross bawah zona OB (K=77.8)",
+      "stoch_k": 77.8,
+      "adx": 23.2,
+      "atr_rel": 1.21,
+      "ema_fast": 2233.05,
+      "ema_slow": 2232.94,
+      "risk_usdt": 10.0,
+      "status": "OPEN",
+      "exit_price": null,
+      "exit_time": null,
+      "result_r": null,
+      "result": null
     }
   ],
   "closed": [
@@ -1834,5 +1869,5 @@
   ],
   "last_online_day": "2026-10-30",
   "last_report_ts": 1793363868.142132,
-  "last_candle": 1793369700000
+  "last_candle": 1793373300000
 }
