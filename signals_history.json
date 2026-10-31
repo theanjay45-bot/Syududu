@@ -139,6 +139,41 @@
       "exit_time": null,
       "result_r": null,
       "result": null
+    },
+    {
+      "signal_id": "SOL-USDT-SWAP|SHORT|1793425500000|TAPTE",
+      "symbol": "SOL-USDT-SWAP",
+      "direction": "SHORT",
+      "timeframe": "15m",
+      "setup": "TAPTE",
+      "note": "HTF 1H: BEAR ✅\nADX: 23.4 | ATR rel: 0.99x\nTren 15m: BEAR (5/5) | Struktur LH+LL ✓ | Harga < EMA13 < EMA21 ✓ | Supertrend merah ✓ | Harga < BB MA20 ✓\nArea: Fib50-618@96.1\nPattern: double_top (Double top ~96.9)\nTrigger: Bearish Engulfing",
+      "signal_candle_time": 1793425500000,
+      "signal_candle_iso": "2026-10-31T05:45:00+00:00",
+      "created_at": "2026-10-31T06:06:21.388078+00:00",
+      "entry": 95.84,
+      "sl": 97.04,
+      "tp": 93.44,
+      "rr": 2.0,
+      "atr": 0.3257,
+      "sl_atr": 3.68,
+      "risk_pct": 1.25,
+      "htf_bias": "BEAR",
+      "trend_bias": "BEAR",
+      "trend_score": 5,
+      "area_level": "Fib50-618@96.1",
+      "pattern": "double_top",
+      "trigger": "Bearish Engulfing",
+      "stoch_k": 71.2,
+      "adx": 23.4,
+      "atr_rel": 0.99,
+      "ema_fast": 96.05,
+      "ema_slow": 96.08,
+      "risk_usdt": 10.0,
+      "status": "OPEN",
+      "exit_price": null,
+      "exit_time": null,
+      "result_r": null,
+      "result": null
     }
   ],
   "closed": [
@@ -1869,5 +1904,5 @@
   ],
   "last_online_day": "2026-10-31",
   "last_report_ts": 1793413242.6251514,
-  "last_candle": 1793422800000
+  "last_candle": 1793425500000
 }
