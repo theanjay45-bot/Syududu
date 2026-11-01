@@ -104,6 +104,41 @@
       "exit_time": null,
       "result_r": null,
       "result": null
+    },
+    {
+      "signal_id": "LINK-USDT-SWAP|SHORT|1793547900000|TAPTE",
+      "symbol": "LINK-USDT-SWAP",
+      "direction": "SHORT",
+      "timeframe": "15m",
+      "setup": "TAPTE",
+      "note": "HTF 1H: BEAR ✅\nADX: 22.5 | ATR rel: 0.93x\nTren 15m: BEAR (5/5) | Struktur LH+LL ✓ | Harga < EMA13 < EMA21 ✓ | Supertrend merah ✓ | Harga < BB MA20 ✓\nArea: SwingHigh@11.7\nPattern: double_top (Double top ~11.7)\nTrigger: Stoch cross bawah zona OB (K=79.5)",
+      "signal_candle_time": 1793547900000,
+      "signal_candle_iso": "2026-11-01T15:45:00+00:00",
+      "created_at": "2026-11-01T16:03:46.413699+00:00",
+      "entry": 11.611,
+      "sl": 11.817,
+      "tp": 11.2,
+      "rr": 2.0,
+      "atr": 0.0454,
+      "sl_atr": 4.53,
+      "risk_pct": 1.77,
+      "htf_bias": "BEAR",
+      "trend_bias": "BEAR",
+      "trend_score": 5,
+      "area_level": "SwingHigh@11.7",
+      "pattern": "double_top",
+      "trigger": "Stoch cross bawah zona OB (K=79.5)",
+      "stoch_k": 79.5,
+      "adx": 22.5,
+      "atr_rel": 0.93,
+      "ema_fast": 11.62,
+      "ema_slow": 11.64,
+      "risk_usdt": 10.0,
+      "status": "OPEN",
+      "exit_price": null,
+      "exit_time": null,
+      "result_r": null,
+      "result": null
     }
   ],
   "closed": [
@@ -2009,5 +2044,5 @@
   ],
   "last_online_day": "2026-11-01",
   "last_report_ts": 1793539302.1702144,
-  "last_candle": 1793545200000
+  "last_candle": 1793547900000
 }
