@@ -34,6 +34,41 @@
       "exit_time": null,
       "result_r": null,
       "result": null
+    },
+    {
+      "signal_id": "BTC-USDT-SWAP|SHORT|1793922300000|TAPTE",
+      "symbol": "BTC-USDT-SWAP",
+      "direction": "SHORT",
+      "timeframe": "15m",
+      "setup": "TAPTE",
+      "note": "HTF 1H: BEAR ✅\nADX: 43.1 | ATR rel: 0.95x\nTren 15m: BEAR (3/5) | Struktur LH+LL ✓ | EMA tidak selaras | Supertrend merah ✓ | Harga > BB MA20 ✓\nArea: SwingHigh@76530.0\nPattern: double_top (Double top ~76363.9)\nTrigger: Tweezer Top + Shooting Star",
+      "signal_candle_time": 1793922300000,
+      "signal_candle_iso": "2026-11-05T23:45:00+00:00",
+      "created_at": "2026-11-06T00:00:05.205872+00:00",
+      "entry": 76049.5,
+      "sl": 76640.1,
+      "tp": 74868.3,
+      "rr": 2.0,
+      "atr": 366.9332,
+      "sl_atr": 1.61,
+      "risk_pct": 0.78,
+      "htf_bias": "BEAR",
+      "trend_bias": "BEAR",
+      "trend_score": 3,
+      "area_level": "SwingHigh@76530.0",
+      "pattern": "double_top",
+      "trigger": "Tweezer Top + Shooting Star",
+      "stoch_k": 90.0,
+      "adx": 43.1,
+      "atr_rel": 0.95,
+      "ema_fast": 75927.28,
+      "ema_slow": 76079.14,
+      "risk_usdt": 10.0,
+      "status": "OPEN",
+      "exit_price": null,
+      "exit_time": null,
+      "result_r": null,
+      "result": null
     }
   ],
   "closed": [
@@ -2289,5 +2324,5 @@
   ],
   "last_online_day": "2026-11-05",
   "last_report_ts": 1793913114.324654,
-  "last_candle": 1793918700000
+  "last_candle": 1793922300000
 }
