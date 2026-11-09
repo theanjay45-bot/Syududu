@@ -104,6 +104,41 @@
       "exit_time": null,
       "result_r": null,
       "result": null
+    },
+    {
+      "signal_id": "CL-USDT-SWAP|SHORT|1794219300000|TAPTE",
+      "symbol": "CL-USDT-SWAP",
+      "direction": "SHORT",
+      "timeframe": "15m",
+      "setup": "TAPTE",
+      "note": "HTF 1H: BEAR ✅\nADX: 21.3 | ATR rel: 1.14x\nTren 15m: BEAR (3/5) | Struktur campuran | Harga < EMA13 < EMA21 ✓ | Supertrend merah ✓ | Harga < BB MA20 ✓\nArea: SwingHigh@90.1\nPattern: double_top (Double top ~90.3)\nTrigger: Bearish Engulfing + Tweezer Top",
+      "signal_candle_time": 1794219300000,
+      "signal_candle_iso": "2026-11-09T10:15:00+00:00",
+      "created_at": "2026-11-09T10:43:00.175709+00:00",
+      "entry": 89.73,
+      "sl": 90.44,
+      "tp": 88.31,
+      "rr": 2.0,
+      "atr": 0.4305,
+      "sl_atr": 1.65,
+      "risk_pct": 0.79,
+      "htf_bias": "BEAR",
+      "trend_bias": "BEAR",
+      "trend_score": 3,
+      "area_level": "SwingHigh@90.1",
+      "pattern": "double_top",
+      "trigger": "Bearish Engulfing + Tweezer Top",
+      "stoch_k": 69.8,
+      "adx": 21.3,
+      "atr_rel": 1.14,
+      "ema_fast": 89.89,
+      "ema_slow": 89.95,
+      "risk_usdt": 10.0,
+      "status": "OPEN",
+      "exit_price": null,
+      "exit_time": null,
+      "result_r": null,
+      "result": null
     }
   ],
   "closed": [
@@ -2674,5 +2709,5 @@
   ],
   "last_online_day": "2026-11-09",
   "last_report_ts": 1794207345.613759,
-  "last_candle": 1794215700000
+  "last_candle": 1794219300000
 }
