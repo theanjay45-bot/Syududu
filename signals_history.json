@@ -209,6 +209,41 @@
       "exit_time": null,
       "result_r": null,
       "result": null
+    },
+    {
+      "signal_id": "ADA-USDT-SWAP|SHORT|1794320100000|TAPTE",
+      "symbol": "ADA-USDT-SWAP",
+      "direction": "SHORT",
+      "timeframe": "15m",
+      "setup": "TAPTE",
+      "note": "HTF 1H: BEAR ✅\nADX: 34.4 | ATR rel: 1.24x\nTren 15m: BEAR (5/5) | Struktur LH+LL ✓ | Harga < EMA13 < EMA21 ✓ | Supertrend merah ✓ | Harga < BB MA20 ✓\nArea: SwingHigh@0.2\nPattern: double_top (Double top ~0.2)\nTrigger: Bearish Engulfing",
+      "signal_candle_time": 1794320100000,
+      "signal_candle_iso": "2026-11-10T14:15:00+00:00",
+      "created_at": "2026-11-10T14:39:58.727563+00:00",
+      "entry": 0.1758,
+      "sl": 0.1787,
+      "tp": 0.17,
+      "rr": 2.0,
+      "atr": 0.001,
+      "sl_atr": 2.9,
+      "risk_pct": 1.65,
+      "htf_bias": "BEAR",
+      "trend_bias": "BEAR",
+      "trend_score": 5,
+      "area_level": "SwingHigh@0.2",
+      "pattern": "double_top",
+      "trigger": "Bearish Engulfing",
+      "stoch_k": 51.8,
+      "adx": 34.4,
+      "atr_rel": 1.24,
+      "ema_fast": 0.18,
+      "ema_slow": 0.18,
+      "risk_usdt": 10.0,
+      "status": "OPEN",
+      "exit_price": null,
+      "exit_time": null,
+      "result_r": null,
+      "result": null
     }
   ],
   "closed": [
@@ -3024,5 +3059,5 @@
   ],
   "last_online_day": "2026-11-10",
   "last_report_ts": 1794318975.9317877,
-  "last_candle": 1794317400000
+  "last_candle": 1794320100000
 }
