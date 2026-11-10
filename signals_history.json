@@ -69,6 +69,41 @@
       "exit_time": null,
       "result_r": null,
       "result": null
+    },
+    {
+      "signal_id": "DOT-USDT-SWAP|SHORT|1794309300000|TAPTE",
+      "symbol": "DOT-USDT-SWAP",
+      "direction": "SHORT",
+      "timeframe": "15m",
+      "setup": "TAPTE",
+      "note": "HTF 1H: BEAR ✅\nADX: 25.4 | ATR rel: 1.07x\nTren 15m: BEAR (3/5) | Struktur campuran | Harga < EMA13 < EMA21 ✓ | Supertrend merah ✓ | Harga < BB MA20 ✓\nArea: SwingHigh@0.9\nPattern: double_top (Double top ~0.9)\nTrigger: Tweezer Top",
+      "signal_candle_time": 1794309300000,
+      "signal_candle_iso": "2026-11-10T11:15:00+00:00",
+      "created_at": "2026-11-10T11:38:54.127856+00:00",
+      "entry": 0.85,
+      "sl": 0.8639,
+      "tp": 0.8222,
+      "rr": 2.0,
+      "atr": 0.0043,
+      "sl_atr": 3.22,
+      "risk_pct": 1.63,
+      "htf_bias": "BEAR",
+      "trend_bias": "BEAR",
+      "trend_score": 3,
+      "area_level": "SwingHigh@0.9",
+      "pattern": "double_top",
+      "trigger": "Tweezer Top",
+      "stoch_k": 70.1,
+      "adx": 25.4,
+      "atr_rel": 1.07,
+      "ema_fast": 0.85,
+      "ema_slow": 0.85,
+      "risk_usdt": 10.0,
+      "status": "OPEN",
+      "exit_price": null,
+      "exit_time": null,
+      "result_r": null,
+      "result": null
     }
   ],
   "closed": [
@@ -2884,5 +2919,5 @@
   ],
   "last_online_day": "2026-11-10",
   "last_report_ts": 1794300447.2120945,
-  "last_candle": 1794305700000
+  "last_candle": 1794309300000
 }
