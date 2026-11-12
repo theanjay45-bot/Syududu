@@ -104,6 +104,41 @@
       "exit_time": null,
       "result_r": null,
       "result": null
+    },
+    {
+      "signal_id": "XRP-USDT-SWAP|SHORT|1794469500000|TAPTE",
+      "symbol": "XRP-USDT-SWAP",
+      "direction": "SHORT",
+      "timeframe": "15m",
+      "setup": "TAPTE",
+      "note": "HTF 1H: BEAR ✅\nADX: 23.5 | ATR rel: 0.83x\nTren 15m: BEAR (3/5) | Struktur LH+LL ✓ | EMA tidak selaras | Supertrend merah ✓ | Harga > BB MA20 ✓\nArea: SwingHigh@1.0\nPattern: double_top (Double top ~1.0)\nTrigger: Stoch cross bawah zona OB (K=75.4)",
+      "signal_candle_time": 1794469500000,
+      "signal_candle_iso": "2026-11-12T07:45:00+00:00",
+      "created_at": "2026-11-12T08:05:07.328856+00:00",
+      "entry": 1.0436,
+      "sl": 1.0509,
+      "tp": 1.0291,
+      "rr": 2.0,
+      "atr": 0.0042,
+      "sl_atr": 1.73,
+      "risk_pct": 0.7,
+      "htf_bias": "BEAR",
+      "trend_bias": "BEAR",
+      "trend_score": 3,
+      "area_level": "SwingHigh@1.0",
+      "pattern": "double_top",
+      "trigger": "Stoch cross bawah zona OB (K=75.4)",
+      "stoch_k": 75.4,
+      "adx": 23.5,
+      "atr_rel": 0.83,
+      "ema_fast": 1.04,
+      "ema_slow": 1.04,
+      "risk_usdt": 10.0,
+      "status": "OPEN",
+      "exit_price": null,
+      "exit_time": null,
+      "result_r": null,
+      "result": null
     }
   ],
   "closed": [
@@ -3129,5 +3164,5 @@
   ],
   "last_online_day": "2026-11-12",
   "last_report_ts": 1794457155.7308204,
-  "last_candle": 1794465000000
+  "last_candle": 1794469500000
 }
