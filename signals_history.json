@@ -69,6 +69,41 @@
       "exit_time": null,
       "result_r": null,
       "result": null
+    },
+    {
+      "signal_id": "BTC-USDT-SWAP|SHORT|1794615300000|TAPTE",
+      "symbol": "BTC-USDT-SWAP",
+      "direction": "SHORT",
+      "timeframe": "15m",
+      "setup": "TAPTE",
+      "note": "HTF 1H: BEAR ✅\nADX: 28.1 | ATR rel: 0.95x\nTren 15m: BEAR (5/5) | Struktur LH+LL ✓ | Harga < EMA13 < EMA21 ✓ | Supertrend merah ✓ | Harga < BB MA20 ✓\nArea: Fib50-618@68381.9\nPattern: double_top (Double top ~69000.9)\nTrigger: Shooting Star",
+      "signal_candle_time": 1794615300000,
+      "signal_candle_iso": "2026-11-14T00:15:00+00:00",
+      "created_at": "2026-11-14T00:36:51.493006+00:00",
+      "entry": 68295.4,
+      "sl": 69168.9,
+      "tp": 66548.4,
+      "rr": 2.0,
+      "atr": 246.321,
+      "sl_atr": 3.55,
+      "risk_pct": 1.28,
+      "htf_bias": "BEAR",
+      "trend_bias": "BEAR",
+      "trend_score": 5,
+      "area_level": "Fib50-618@68381.9",
+      "pattern": "double_top",
+      "trigger": "Shooting Star",
+      "stoch_k": 77.9,
+      "adx": 28.1,
+      "atr_rel": 0.95,
+      "ema_fast": 68314.97,
+      "ema_slow": 68418.34,
+      "risk_usdt": 10.0,
+      "status": "OPEN",
+      "exit_price": null,
+      "exit_time": null,
+      "result_r": null,
+      "result": null
     }
   ],
   "closed": [
@@ -3232,7 +3267,7 @@
       "result": "WIN"
     }
   ],
-  "last_online_day": "2026-11-13",
+  "last_online_day": "2026-11-14",
   "last_report_ts": 1794602355.1890528,
-  "last_candle": 1794612600000
+  "last_candle": 1794615300000
 }
