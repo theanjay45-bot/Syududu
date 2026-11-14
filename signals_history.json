@@ -104,6 +104,41 @@
       "exit_time": null,
       "result_r": null,
       "result": null
+    },
+    {
+      "signal_id": "BNB-USDT-SWAP|SHORT|1794633300000|TAPTE",
+      "symbol": "BNB-USDT-SWAP",
+      "direction": "SHORT",
+      "timeframe": "15m",
+      "setup": "TAPTE",
+      "note": "HTF 1H: BEAR ✅\nADX: 43.8 | ATR rel: 1.18x\nTren 15m: BEAR (3/5) | Struktur campuran | Harga < EMA13 < EMA21 ✓ | Supertrend merah ✓ | Harga < BB MA20 ✓\nArea: Fib50-618@621.0\nPattern: double_top (Double top ~631.9)\nTrigger: Shooting Star",
+      "signal_candle_time": 1794633300000,
+      "signal_candle_iso": "2026-11-14T05:15:00+00:00",
+      "created_at": "2026-11-14T05:36:01.055090+00:00",
+      "entry": 619.0,
+      "sl": 633.09,
+      "tp": 590.81,
+      "rr": 2.0,
+      "atr": 3.3116,
+      "sl_atr": 4.26,
+      "risk_pct": 2.28,
+      "htf_bias": "BEAR",
+      "trend_bias": "BEAR",
+      "trend_score": 3,
+      "area_level": "Fib50-618@621.0",
+      "pattern": "double_top",
+      "trigger": "Shooting Star",
+      "stoch_k": 84.8,
+      "adx": 43.8,
+      "atr_rel": 1.18,
+      "ema_fast": 619.68,
+      "ema_slow": 622.0,
+      "risk_usdt": 10.0,
+      "status": "OPEN",
+      "exit_price": null,
+      "exit_time": null,
+      "result_r": null,
+      "result": null
     }
   ],
   "closed": [
@@ -3304,5 +3339,5 @@
   ],
   "last_online_day": "2026-11-14",
   "last_report_ts": 1794630051.026129,
-  "last_candle": 1794629700000
+  "last_candle": 1794633300000
 }
