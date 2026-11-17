@@ -1,0 +1,13 @@
+name: Schedule check
+
+on:
+  schedule:
+    - cron: "13,28,43,58 * * * *"
+
+permissions: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Schedule received"
